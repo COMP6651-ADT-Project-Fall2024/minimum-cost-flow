@@ -36,12 +36,12 @@ public class CapacityScaling implements Algorithm {
 
         while (scalingFactor >= 1) {
             while (d > 0 && augmentingPathExists(s, t, scalingFactor, residualGraph)) {
-                List<Integer> minCostPath = findShortestPath(s, t, scalingFactor, residualGraph);
-                int maxFlowThatCanBePushed = findMaxFlowThatCanBePushed(minCostPath, residualGraph);
+                List<Integer> shortestPath = findShortestPath(s, t, scalingFactor, residualGraph);
+                int maxFlowThatCanBePushed = findMaxFlowThatCanBePushed(shortestPath, residualGraph);
                 if (maxFlowThatCanBePushed > d) {
                     maxFlowThatCanBePushed = d;
                 }
-                augmentFlow(maxFlowThatCanBePushed, adjacencyMatrix, flow, minCostPath);
+                augmentFlow(maxFlowThatCanBePushed, adjacencyMatrix, flow, shortestPath);
                 computeResidualCapacity(residualGraph, adjacencyMatrix, flow, cap);
                 d = d - maxFlowThatCanBePushed;
             }
