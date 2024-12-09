@@ -14,6 +14,7 @@ How to run?
 - If you choose to run tests, then tests will be run on all the algorithms and results will be displayed
 - If you choose to run simulations, then you are asked whether you want to run simulations 1 or simulations 2
 - You can choose any of those 2, to see how Simulations are working
+- Note: When running Simulations2, it takes a bit more time because we are considering high r values. So, please wait for a minute until you get the complete output
 
 Outputs:
 --------------
