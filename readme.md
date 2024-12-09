@@ -22,6 +22,23 @@ Outputs:
 - When you run the tests and simulations, the outputs of them can be seen in the console.
 - The outputs that you see in the terminal/console are formatted clearly according to the tables, for everyone to understand what is going on.
 
+Graphs
+--------------
+All the graphs are present in src/main/resources folder of the project.
+
+For testing:
+- Used graphs graph-test-1.txt, graph-test-2.txt, graph-test-3.txt
+
+For Simulations:
+- Simulations 1 uses graph1.txt to graph8.txt
+- Simulations 2 uses graph9.txt to graph28.txt
+- In Simulations 2 there are 5 input sets, each of the input set uses the below graphs:
+  - Input Set 1 -- graph9.txt to graph12.txt
+  - Input Set 2 -- graph13.txt to graph16.txt
+  - Input Set 3 -- graph17.txt to graph20.txt
+  - Input Set 4 -- graph21.txt to graph24.txt
+  - Input Set 5 -- graph25.txt to graph28.txt
+
 Reports:
 -------------
 The details of tests and simulations are clearly mentioned in the report. Please see the report for more details.
