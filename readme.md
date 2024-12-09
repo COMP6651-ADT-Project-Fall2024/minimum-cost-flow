@@ -19,8 +19,8 @@ How to run?
 Outputs:
 --------------
 - You can see the graph files that are generated in minimum-cost-flow\src\main\resources.
-- And the outputs of tests and simulations can be seen the console.
-- The outputs that you see in the terminal/console are formatted clearly according to the tables, so everyone can understand what is going on.
+- When you run the tests and simulations, the outputs of them can be seen in the console.
+- The outputs that you see in the terminal/console are formatted clearly according to the tables, for everyone to understand what is going on.
 
 Reports:
 -------------
