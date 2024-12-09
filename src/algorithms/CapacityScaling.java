@@ -143,13 +143,13 @@ public class CapacityScaling implements Algorithm {
         }
     }
 
-    private int findMaxFlowThatCanBePushed(List<Integer> minCostPath, int[][] residualCapacity) {
+    private int findMaxFlowThatCanBePushed(List<Integer> shortestPath, int[][] residualCapacity) {
         int maxFlowThatCanBePushed = Integer.MAX_VALUE;
-        for (int i = 0; i < minCostPath.size() - 1; i ++) {
-            maxFlowThatCanBePushed = Math.min(maxFlowThatCanBePushed, residualCapacity[minCostPath.get(i)][minCostPath.get(i + 1)]);
+        for (int i = 0; i < shortestPath.size() - 1; i ++) {
+            maxFlowThatCanBePushed = Math.min(maxFlowThatCanBePushed, residualCapacity[shortestPath.get(i)][shortestPath.get(i + 1)]);
         }
 
-        // I think this needs to return infinite if minCostPath.size() <= 1. So I think it's okay
+        // I think this needs to return infinite if shortestPath.size() <= 1. So I think it's okay
         return maxFlowThatCanBePushed;
     }
 
