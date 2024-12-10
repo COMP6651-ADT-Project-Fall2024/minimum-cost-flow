@@ -144,26 +144,6 @@ This algorithm uses a greedy approach. It first checks if there is any augmentin
 
 \textbf{Pseudo code for Algorithm 1:}
 
-\begin{algorithm}[H]
-\caption{\textcolor{keywordcolor}{\textsc{CheckIfPathExists}}}
-\begin{algorithmic}[1]
-\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{residualGraph}, \textit{visited}
-\State \algorithmickeyword{Output:} \textit{True} or \textit{False}
-\If{$s = t$}
-    \State \Return \textit{True}
-\EndIf
-\State \textit{visited}[s] $\gets 1$
-\For{$i = 0$ to $n - 1$}
-    \If{\textit{residualGraph}[s][i] $\geq 1$ \algorithmickeyword{and} \textit{visited}[i] = 0}
-        \If{\textcolor{identifiercolor}{\textsc{CheckIfPathExists}}($i, t, \textit{residualGraph}, \textit{visited}$)}
-            \State \Return \textit{True}
-        \EndIf
-    \EndIf
-\EndFor
-\State \Return \textit{False}
-\end{algorithmic}
-\end{algorithm}
-
 
 \begin{algorithm}[H]
 \caption{\textcolor{keywordcolor}{SuccessiveShortestPaths}}
@@ -201,6 +181,8 @@ This algorithm uses a greedy approach. It first checks if there is any augmentin
 \end{algorithmic}
 \end{algorithm}
 
+
+
 \begin{algorithm}[H]
 \caption{\textcolor{keywordcolor}{\textsc{ComputeMinCostPathsFromSource}}}
 \begin{algorithmic}[1]
@@ -224,6 +206,25 @@ This algorithm uses a greedy approach. It first checks if there is any augmentin
 \end{algorithmic}
 \end{algorithm}
 
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{CheckIfPathExists}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{residualGraph}, \textit{visited}
+\State \algorithmickeyword{Output:} \textit{True} or \textit{False}
+\If{$s = t$}
+    \State \Return \textit{True}
+\EndIf
+\State \textit{visited}[s] $\gets 1$
+\For{$i = 0$ to $n - 1$}
+    \If{\textit{residualGraph}[s][i] $\geq 1$ \algorithmickeyword{and} \textit{visited}[i] = 0}
+        \If{\textcolor{identifiercolor}{\textsc{CheckIfPathExists}}($i, t, \textit{residualGraph}, \textit{visited}$)}
+            \State \Return \textit{True}
+        \EndIf
+    \EndIf
+\EndFor
+\State \Return \textit{False}
+\end{algorithmic}
+\end{algorithm}
 
 \begin{algorithm}[H]
 \caption{\textcolor{keywordcolor}{\textsc{IsAugmentingPathExists}}}
@@ -276,26 +277,6 @@ This algorithm uses a scaling factor, which is initialized to the maximum capaci
 \textbf{Pseudo code for Algorithm 2:}
 
 \begin{algorithm}[H]
-\caption{\textcolor{keywordcolor}{\textsc{CheckIfPathExists}}}
-\begin{algorithmic}[1]
-\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{scalingFactor}, \textit{residualGraph}, \textit{visited}
-\State \algorithmickeyword{Output:} \textit{True} or \textit{False}
-\If{$s = t$}
-    \State \Return \textit{True}
-\EndIf
-\State \textit{visited}[s] $\gets 1$
-\For{$i = 0$ to $n - 1$}
-    \If{\textit{residualGraph}[s][i] $\geq$ \textit{scalingFactor} \algorithmickeyword{and} \textit{visited}[i] = 0}
-        \If{\textcolor{identifiercolor}{\textsc{CheckIfPathExists}}($i, t, \textit{scalingFactor}, \textit{residualGraph}, \textit{visited}$)}
-            \State \Return \textit{True}
-        \EndIf
-    \EndIf
-\EndFor
-\State \Return \textit{False}
-\end{algorithmic}
-\end{algorithm}
-
-\begin{algorithm}[H]
 \caption{\textcolor{keywordcolor}{Capacity Scaling}}
 \begin{algorithmic}[1]
 \State \algorithmickeyword{Inputs:} \textit{graphFileName, s} (source node), \textit{t} (sink node), \textit{d} (required total flow)
@@ -332,6 +313,26 @@ This algorithm uses a scaling factor, which is initialized to the maximum capaci
 \State \textit{flowValue} $\gets$ \textcolor{identifiercolor}{\textsc{GetFlowValue}}($s$, \textit{flow})
 \State \algorithmickeyword{Result:} \textit{<minCost, flowValue, numOfAugmentingPaths, avgLengthOfAugmentingPath, meanProportionalLength>}
 \State \Return \textit{result}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{CheckIfPathExists}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{scalingFactor}, \textit{residualGraph}, \textit{visited}
+\State \algorithmickeyword{Output:} \textit{True} or \textit{False}
+\If{$s = t$}
+    \State \Return \textit{True}
+\EndIf
+\State \textit{visited}[s] $\gets 1$
+\For{$i = 0$ to $n - 1$}
+    \If{\textit{residualGraph}[s][i] $\geq$ \textit{scalingFactor} \algorithmickeyword{and} \textit{visited}[i] = 0}
+        \If{\textcolor{identifiercolor}{\textsc{CheckIfPathExists}}($i, t, \textit{scalingFactor}, \textit{residualGraph}, \textit{visited}$)}
+            \State \Return \textit{True}
+        \EndIf
+    \EndIf
+\EndFor
+\State \Return \textit{False}
 \end{algorithmic}
 \end{algorithm}
 
@@ -399,6 +400,8 @@ This algorithm uses a scaling factor, which is initialized to the maximum capaci
 \end{algorithmic}
 \end{algorithm}
 
+\newpage
+
 \subsection{Algorithm 3: Successive Shortest Paths with Scaling Factor (SC)}
 
 \textbf{Brief description of the working of Algorithm 3 (Successive Shortest Paths SC):}
@@ -406,16 +409,6 @@ This algorithm uses a scaling factor, which is initialized to the maximum capaci
 This algorithm uses a scaling factor, which is initialized to the maximum capacity of an edge in the source-sink network. The scaling factor is reduced by 2 when there is no augmenting path with residual capacity greater than or equal to the scaling factor. Because of this, we can reduce the total number of times we augment the flow, improving the runtime of the algorithm. When there is an augmenting path in the network, it selects the augmenting path with the minimum cost among all the augmenting paths. It then uses the capacity of that augmenting path to augment the flow in the network. After that, it computes the updated residual graph and updates the required total flow \(d\) that is yet to be pushed.~\cite{clrs}
 
 \textbf{Pseudo code for Algorithm 3:}
-
-\begin{algorithm}[H]
-\caption{\textcolor{keywordcolor}{\textsc{IsAugmentingPathExists}}}
-\begin{algorithmic}[1]
-\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{scalingFactor}, \textit{residualGraph}
-\State \algorithmickeyword{Output:} \textit{True} or \textit{False}
-\State \algorithmickeyword{Initialize} \textit{visited}[0…$n$-1] with all entries 0
-\State \Return \textcolor{identifiercolor}{\textsc{CheckIfPathExists}}($s, t, \textit{scalingFactor}, \textit{residualGraph}, \textit{visited}$)
-\end{algorithmic}
-\end{algorithm}
 
 \begin{algorithm}[H]
 \caption{\textcolor{keywordcolor}{SuccessiveShortestPathsSC}}
@@ -456,7 +449,15 @@ This algorithm uses a scaling factor, which is initialized to the maximum capaci
 \end{algorithmic}
 \end{algorithm}
 
-
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{IsAugmentingPathExists}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{scalingFactor}, \textit{residualGraph}
+\State \algorithmickeyword{Output:} \textit{True} or \textit{False}
+\State \algorithmickeyword{Initialize} \textit{visited}[0…$n$-1] with all entries 0
+\State \Return \textcolor{identifiercolor}{\textsc{CheckIfPathExists}}($s, t, \textit{scalingFactor}, \textit{residualGraph}, \textit{visited}$)
+\end{algorithmic}
+\end{algorithm}
 
 \begin{algorithm}[H]
 \caption{\textcolor{keywordcolor}{\textsc{CheckIfPathExists}}}
@@ -652,6 +653,65 @@ To ensure the correctness of our implementation, we developed a dedicated testin
 The graphs were saved in three separate files: \texttt{graph-test-1.txt}, \texttt{graph-test-2.txt}, and \texttt{graph-test-3.txt}. The \texttt{Test} class executes each algorithm on these graph files and compares the output with the precomputed expected values. If the outputs match, the test passes; otherwise, it fails. The results of each test are clearly displayed on the console.
 
 In addition to this structured testing approach, we ran the algorithms multiple times to ensure consistency and reliability. No issues were observed during these runs. We also compared metrics such as the number of augmenting paths and the minimum cost across the algorithms to detect any unexpected behavior. All comparisons confirmed the correctness of our implementation, with all algorithms performing as expected.
+
+\subsection{Test Results}
+\paragraph{}
+The implemented algorithms were tested on three different test graphs to verify their correctness. For each algorithm, the actual flow and minimum cost values were compared against the expected results. The details are as follows:
+
+\paragraph{Test Graph 1:}
+\begin{verbatim}
+For Algorithm 1: 
+Actual Flow: 4. Expected Flow: 4
+Actual Minimum Cost: 27.0. Expected Minimum Cost: 27
+For Algorithm 2: 
+Actual Flow: 4. Expected Flow: 4
+Actual Minimum Cost: 30.0. Expected Minimum Cost: 30
+For Algorithm 3: 
+Actual Flow: 4. Expected Flow: 4
+Actual Minimum Cost: 30.0. Expected Minimum Cost: 30
+For Algorithm 4: 
+Actual Flow: 4. Expected Flow: 4
+Actual Minimum Cost: 27.0. Expected Minimum Cost: 27
+\end{verbatim}
+
+\paragraph{Test Graph 2:}
+\begin{verbatim}
+For Algorithm 1: 
+Actual Flow: 7. Expected Flow: 7
+Actual Minimum Cost: 79.0. Expected Minimum Cost: 79
+For Algorithm 2: 
+Actual Flow: 7. Expected Flow: 7
+Actual Minimum Cost: 82.0. Expected Minimum Cost: 82
+For Algorithm 3: 
+Actual Flow: 7. Expected Flow: 7
+Actual Minimum Cost: 79.0. Expected Minimum Cost: 79
+For Algorithm 4: 
+Actual Flow: 7. Expected Flow: 7
+Actual Minimum Cost: 79.0. Expected Minimum Cost: 79
+\end{verbatim}
+
+\paragraph{Test Graph 3:}
+\begin{verbatim}
+For Algorithm 1: 
+Actual Flow: 7. Expected Flow: 7
+Actual Minimum Cost: 96.0. Expected Minimum Cost: 96
+For Algorithm 2: 
+Actual Flow: 7. Expected Flow: 7
+Actual Minimum Cost: 108.0. Expected Minimum Cost: 108
+For Algorithm 3: 
+Actual Flow: 7. Expected Flow: 7
+Actual Minimum Cost: 96.0. Expected Minimum Cost: 96
+For Algorithm 4: 
+Actual Flow: 7. Expected Flow: 7
+Actual Minimum Cost: 96.0. Expected Minimum Cost: 96
+\end{verbatim}
+
+\paragraph{Summary:}
+\begin{verbatim}
+-----------------------------------------------------------------------------
+ALL TESTS PASSED
+Process finished with exit code 0
+\end{verbatim}
 
 \section{Results}
 
