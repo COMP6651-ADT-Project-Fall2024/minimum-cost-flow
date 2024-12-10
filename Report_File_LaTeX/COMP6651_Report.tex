@@ -16,6 +16,22 @@
 \usepackage{subcaption} % Add this in the preamble
 \usepackage{float}
 \usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage{xcolor}
+
+% Define custom colors
+\definecolor{keywordcolor}{rgb}{0.58, 0.0, 0.83} % Purple for keywords
+\definecolor{commentcolor}{rgb}{0.0, 0.5, 0.0}   % Green for comments
+\definecolor{identifiercolor}{rgb}{0.0, 0.0, 0.8} % Blue for identifiers
+\definecolor{stringcolor}{rgb}{0.8, 0.0, 0.0}    % Red for strings
+
+% Redefine algorithmic keywords with custom colors
+\algrenewcommand\algorithmickeyword[1]{\textcolor{keywordcolor}{\textbf{#1}}}
+\algrenewcommand\algorithmiccomment[1]{\hfill\textcolor{commentcolor}{// #1}}
+\renewcommand{\thealgorithm}{}
 \bibliographystyle{unsrt}
 
 \title{Project Report of COMP6651: Analyzing and Implementing Minimum-Cost Flow Algorithms on Randomized Source-Sink Networks
@@ -103,77 +119,924 @@ A major challenge is balancing computational speed with solution accuracy. Algor
 
 The purpose of this project is to implement and analyze four prominent algorithms for solving the MCF problem: the Successive Shortest Path, Capacity Scaling, Primal-Dual, and a hybrid approach. By testing these algorithms on randomly generated, this project aims to provide a comprehensive comparison of their efficiency, scalability, and practical applicability based on the Minimization results of each of the algorithms. Furthermore, the insights gained from this study will contribute to the broader understanding of network optimization methods and offer guidance for selecting appropriate algorithms for specific applications.
 
+
+
 \section{Related Work}
-\subsection{Overview}
+The minimum-cost flow (MCF) problem has been extensively studied in the fields of operations research and computer science. Numerous algorithms have been developed to solve this problem, ranging from combinatorial methods to primal-dual approaches and cost-scaling techniques. Each algorithm offers unique trade-offs in terms of computational complexity, scalability, and suitability for various types of networks.
 
-\subsection{Optimization-Based Methods}
+One of the earliest methods for solving the MCF problem is the network simplex algorithm, introduced by Dantzig \cite{Dantzig1951}. This approach is widely used in practice due to its efficiency on small and medium-sized networks. Edmonds and Karp \cite{Edmonds1972} later proposed capacity-scaling techniques that improve computational efficiency for larger networks. The successive shortest path algorithm, developed independently by Jewell \cite{Jewell1958} and Iri \cite{Iri1960}, is another key method that incrementally builds an optimal solution by augmenting flow along shortest paths.
 
+Goldberg and Tarjan \cite{Goldberg1989} introduced the cost-scaling algorithm, which has become one of the most efficient solutions for the MCF problem in both theory and practice. Their approach leverages the concept of $\epsilon$-optimality to refine solutions iteratively. The primal-dual algorithm, initially proposed by Ford and Fulkerson \cite{FordFulkerson1962}, remains a foundational method, especially for problems requiring dual feasibility alongside primal optimization.
 
-\subsection{Modularity-Based Methods}
+Recent studies have focused on experimental evaluations and efficient implementations of these algorithms. Kovács \cite{kovacs2015minimum} compared modern implementations of cost-scaling, successive shortest path, and network simplex methods, highlighting their performance on large-scale networks. The LEMON library \cite{LEMON} provides open-source implementations of these algorithms, offering a practical framework for testing and deployment.
 
-
-\subsection{Deep Learning Methods}
-
-% \subsection{Conclusion}
+This study builds on prior work by implementing and comparing four MCF algorithms—Successive Shortest Path, Capacity Scaling, Primal-Dual, and a hybrid approach. It aims to evaluate their performance across different network scenarios, contributing to the understanding of algorithmic trade-offs in practical applications.
 
 
-\section{Proposed Approach}
+
+\section{Implementation Details}
+
+\subsection{Algorithm 1: Successive Shortest Paths}
+
+\textbf{Brief description of the working of Algorithm 1 (Successive Shortest Paths):}
+
+This algorithm uses a greedy approach. It first checks if there is any augmenting path in the residual network, and if there is one, it selects the augmenting path that has the minimum cost. It then uses the capacity of that augmenting path to augment the flow in the network. After that, it computes the updated residual graph and updates the required total flow \(d\) that is yet to be pushed. This process repeats until \(d\) becomes 0 or there are no more augmenting paths.
+
+\textbf{Pseudo code for Algorithm 1:}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{CheckIfPathExists}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{residualGraph}, \textit{visited}
+\State \algorithmickeyword{Output:} \textit{True} or \textit{False}
+\If{$s = t$}
+    \State \Return \textit{True}
+\EndIf
+\State \textit{visited}[s] $\gets 1$
+\For{$i = 0$ to $n - 1$}
+    \If{\textit{residualGraph}[s][i] $\geq 1$ \algorithmickeyword{and} \textit{visited}[i] = 0}
+        \If{\textcolor{identifiercolor}{\textsc{CheckIfPathExists}}($i, t, \textit{residualGraph}, \textit{visited}$)}
+            \State \Return \textit{True}
+        \EndIf
+    \EndIf
+\EndFor
+\State \Return \textit{False}
+\end{algorithmic}
+\end{algorithm}
 
 
-\subsection{GNN Architectures}
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{SuccessiveShortestPaths}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} \textit{graphFileName, s} (source node), \textit{t} (sink node), \textit{d} (required total flow)
+\State \textit{adjacencyMatrix} $\gets$ \textcolor{identifiercolor}{\textsc{CreateAdjacencyMatrixFromFile}}(\textit{graphFileName})
+\State \textit{cap} $\gets$ \textcolor{identifiercolor}{\textsc{CreateCapacityMatrixFromFile}}(\textit{graphFileName})
+\State \textit{unitCost} $\gets$ \textcolor{identifiercolor}{\textsc{CreateUnitCostMatrixFromFile}}(\textit{graphFileName})
+\State \algorithmickeyword{Initialize} \textit{flow} matrix to all zeros
+\State \textit{residualGraph} $\gets$ \textcolor{identifiercolor}{\textsc{ComputeResidualCapacity}}(\textit{residualGraph}, \textit{adjacencyMatrix}, \textit{flow}, \textit{cap})
 
-\subsubsection{GCNConv}
+\If{$d = 0$}
+    \State \Return result with all fields set to 0
+\EndIf
+
+\While{$d > 0$ \algorithmickeyword{and} \textcolor{identifiercolor}{\textsc{IsAugmentingPathExists}}($s, t, \textit{residualGraph}$)}
+    \State \algorithmickeyword{Initialize} \textit{minCostPath} $\gets \emptyset$
+    \State \textit{minCostPath} $\gets$ \textcolor{identifiercolor}{\textsc{FindMinimumCostPath}}($s, t, \textit{unitCost}, \textit{residualGraph}$)
+    \State \textit{maxFlowThatCanBePushed} $\gets$ \textcolor{identifiercolor}{\textsc{FindMaxFlowThatCanBePushed}}(\textit{minCostPath}, \textit{residualGraph})
+    \If{\textit{maxFlowThatCanBePushed} $> d$}
+        \State \textit{maxFlowThatCanBePushed} $\gets d$
+    \EndIf
+    \State \textcolor{identifiercolor}{\textsc{AugmentFlow}}(\textit{maxFlowThatCanBePushed}, \textit{adjacencyMatrix}, \textit{flow}, \textit{minCostPath})
+    \State \textcolor{identifiercolor}{\textsc{ComputeResidualCapacity}}(\textit{residualGraph}, \textit{adjacencyMatrix}, \textit{flow}, \textit{cap})
+    \State $d \gets d - \textit{maxFlowThatCanBePushed}$
+\EndWhile
+
+\State \textit{avgLengthOfAugmentingPath} $\gets$ \textit{sumOfLengthsOfAugmentingPaths} / \textit{numOfAugmentingPaths}
+\State \textit{longestAcyclicPath} $\gets$ \textcolor{identifiercolor}{\textsc{FindLengthOfLongestAcyclicPath}}(\textit{adjacencyMatrix}, $s, t$)
+\State \textit{meanProportionalLength} $\gets$ \textit{avgLengthOfAugmentingPath} / \textit{longestAcyclicPath}
+\State \textit{minCost} $\gets$ \textcolor{identifiercolor}{\textsc{FindCost}}(\textit{flow}, \textit{unitCost})
+\State \textit{flowValue} $\gets$ \textcolor{identifiercolor}{\textsc{GetFlowValue}}($s$, \textit{flow})
+\State \algorithmickeyword{Result:} \textit{<minCost, flowValue, numOfAugmentingPaths, avgLengthOfAugmentingPath, meanProportionalLength>}
+\State \Return \textit{result}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{ComputeMinCostPathsFromSource}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), \textit{unitCost}, \textit{residualGraph}, \textit{parent}
+\State \algorithmickeyword{Initialize} \textit{minCost}[0…$n$-1] $\gets \infty$
+\State \textit{minCost}[s] $\gets 0$
+\For{$i = 1$ to $n-1$}
+    \For{$j = 0$ to $n-1$}
+        \For{$k = 0$ to $n-1$}
+            \If{$j \neq k$ \algorithmickeyword{and} \textit{unitCost}[j][k] $\neq 0$}
+                \If{\textit{residualGraph}[j][k] $\geq 1$}
+                    \If{\textit{minCost}[k] - \textit{minCost}[j] $> \textit{unitCost}[j][k]$}
+                        \State \textit{minCost}[k] $\gets \textit{minCost}[j] + \textit{unitCost}[j][k]$
+                        \State \textit{parent}[k] $\gets j$
+                    \EndIf
+                \EndIf
+            \EndIf
+        \EndFor
+    \EndFor
+\EndFor
+\end{algorithmic}
+\end{algorithm}
 
 
-\subsubsection{GraphSAGEConv}
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{IsAugmentingPathExists}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{residualGraph}
+\State \algorithmickeyword{Output:} \textit{True} or \textit{False}
+\State \algorithmickeyword{Initialize} \textit{visited}[0…$n$-1] with all entries 0
+\State \Return \textcolor{identifiercolor}{\textsc{CheckIfPathExists}}($s, t, \textit{residualGraph}, \textit{visited}$)
+\end{algorithmic}
+\end{algorithm}
 
-\subsection{Scalability Techniques}
-
-\subsubsection{Full-Batch Training}
-
-\subsubsection{Neighbor Sampling}
-
-
-\subsubsection{Graph Partitioning}
-
-
-% \subsection{Expected Contributions}
-
-
-\section{Results, Training, and Evaluation}
-
-\subsection{Datasets}
-
-\subsection{Training Approaches}
-
-\subsection{Evaluation Metrics}
-
-\subsection{Experimental Results}
-\subsubsection{Synthetic Graphs}
-
-\subsubsection{CORA Dataset}
-
-\subsubsection{Reddit Dataset}
-
-% \subsubsection{Performance on CORA Dataset}
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{FindMinimumCostPath}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{unitCost}, \textit{residualGraph}
+\State \algorithmickeyword{Initialize} \textit{parent}[0…$n$-1] $\gets -1$
+\State \textcolor{identifiercolor}{\textsc{ComputeMinCostPathsFromSource}}($s, \textit{unitCost}, \textit{residualGraph}, \textit{parent}$)
+\State \algorithmickeyword{Initialize} \textit{minCostPath} $\gets \emptyset$
+\State \textit{k} $\gets t$
+\While{$k \neq -1$}
+    \State \textit{Add $k$ to the front of minCostPath}
+    \State $k \gets \textit{parent}[k]$
+\EndWhile
+\State \Return \textit{minCostPath}
+\end{algorithmic}
+\end{algorithm}
 
 
-% \subsubsection{Performance on Reddit Dataset}
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{AugmentFlow}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} \textit{maxFlowThatCanBePushed}, \textit{adjacencyMatrix}, \textit{flow}, \textit{minCostPath}
+\State \algorithmickeyword{Output:} Updates the \textit{flow} matrix by augmenting the flow
+\For{\algorithmickeyword{each edge} $(u, v)$ \algorithmickeyword{in} \textit{minCostPath}}
+    \If{\textit{(u, v)} exists in the original network}
+        \State \textit{flow}[u][v] $\gets \textit{flow}[u][v] + \textit{maxFlowThatCanBePushed}$
+    \ElsIf{\textit{(v, u)} exists in the original network}
+        \State \textit{flow}[v][u] $\gets \textit{flow}[v][u] - \textit{maxFlowThatCanBePushed}$
+    \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
 
-% \subsubsection{Performance on SBM Dataset (1000 Nodes)}
+\subsection{Algorithm 2: Capacity Scaling}
+
+\textbf{Brief description of the working of Algorithm 2 (Capacity Scaling):}
+
+This algorithm uses a scaling factor, which is initialized to the maximum capacity of an edge in the source-sink network. The scaling factor is reduced by 2 when there is no augmenting path with residual capacity greater than or equal to the scaling factor. Because of this, we can reduce the total number of times we augment the flow, improving the runtime of the algorithm. When there is an augmenting path in the network, it selects the augmenting path that has the shortest distance from source to sink among all the augmenting paths and uses the capacity of that augmenting path to augment the flow in the network. After that, it computes the updated residual graph and updates the required total flow \(d\), that is yet to be pushed.
+
+\textbf{Pseudo code for Algorithm 2:}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{CheckIfPathExists}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{scalingFactor}, \textit{residualGraph}, \textit{visited}
+\State \algorithmickeyword{Output:} \textit{True} or \textit{False}
+\If{$s = t$}
+    \State \Return \textit{True}
+\EndIf
+\State \textit{visited}[s] $\gets 1$
+\For{$i = 0$ to $n - 1$}
+    \If{\textit{residualGraph}[s][i] $\geq$ \textit{scalingFactor} \algorithmickeyword{and} \textit{visited}[i] = 0}
+        \If{\textcolor{identifiercolor}{\textsc{CheckIfPathExists}}($i, t, \textit{scalingFactor}, \textit{residualGraph}, \textit{visited}$)}
+            \State \Return \textit{True}
+        \EndIf
+    \EndIf
+\EndFor
+\State \Return \textit{False}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{Capacity Scaling}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} \textit{graphFileName, s} (source node), \textit{t} (sink node), \textit{d} (required total flow)
+\State \textit{adjacencyMatrix} $\gets$ \textcolor{identifiercolor}{\textsc{CreateAdjacencyMatrixFromFile}}(\textit{graphFileName})
+\State \textit{cap} $\gets$ \textcolor{identifiercolor}{\textsc{CreateCapacityMatrixFromFile}}(\textit{graphFileName})
+\State \textit{unitCost} $\gets$ \textcolor{identifiercolor}{\textsc{CreateUnitCostMatrixFromFile}}(\textit{graphFileName})
+\State \algorithmickeyword{Initialize} \textit{flow} matrix to all zeros
+\State \textit{residualGraph} $\gets$ \textcolor{identifiercolor}{\textsc{ComputeResidualCapacity}}(\textit{adjacencyMatrix}, \textit{flow}, \textit{cap})
+
+\If{$d = 0$}
+    \State \Return result with all fields set to 0
+\EndIf
+
+\State \textit{scalingFactor} $\gets$ \textcolor{identifiercolor}{\textsc{GetMaxCapacity}}(\textit{cap})
+
+\While{\textit{scalingFactor} $\geq 1$}
+    \While{$d > 0$ \algorithmickeyword{and} \textcolor{identifiercolor}{\textsc{IsAugmentingPathExists}}($s, t, \textit{scalingFactor}, \textit{residualGraph}$)}
+        \State \textit{shortestPath} $\gets$ \textcolor{identifiercolor}{\textsc{FindShortestPath}}($s, t, \textit{scalingFactor}, \textit{residualGraph}$)
+        \State \textit{maxFlowThatCanBePushed} $\gets$ \textcolor{identifiercolor}{\textsc{FindMaxFlowThatCanBePushed}}(\textit{shortestPath}, \textit{residualGraph})
+        \If{\textit{maxFlowThatCanBePushed} $> d$}
+            \State \textit{maxFlowThatCanBePushed} $\gets d$
+        \EndIf
+        \State \textcolor{identifiercolor}{\textsc{AugmentFlow}}(\textit{maxFlowThatCanBePushed}, \textit{adjacencyMatrix}, \textit{flow}, \textit{shortestPath})
+        \State \textcolor{identifiercolor}{\textsc{ComputeResidualCapacity}}(\textit{residualGraph}, \textit{adjacencyMatrix}, \textit{flow}, \textit{cap})
+        \State $d \gets d - \textit{maxFlowThatCanBePushed}$
+    \EndWhile
+    \State \textit{scalingFactor} $\gets \textit{scalingFactor} / 2$
+\EndWhile
+
+\State \textit{avgLengthOfAugmentingPath} $\gets$ \textit{sumOfLengthsOfAugmentingPaths} / \textit{numOfAugmentingPaths}
+\State \textit{longestAcyclicPath} $\gets$ \textcolor{identifiercolor}{\textsc{FindLengthOfLongestAcyclicPath}}(\textit{adjacencyMatrix}, $s, t$)
+\State \textit{meanProportionalLength} $\gets$ \textit{avgLengthOfAugmentingPath} / \textit{longestAcyclicPath}
+\State \textit{minCost} $\gets$ \textcolor{identifiercolor}{\textsc{FindCost}}(\textit{flow}, \textit{unitCost})
+\State \textit{flowValue} $\gets$ \textcolor{identifiercolor}{\textsc{GetFlowValue}}($s$, \textit{flow})
+\State \algorithmickeyword{Result:} \textit{<minCost, flowValue, numOfAugmentingPaths, avgLengthOfAugmentingPath, meanProportionalLength>}
+\State \Return \textit{result}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{IsAugmentingPathExists}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{scalingFactor}, \textit{residualGraph}
+\State \algorithmickeyword{Output:} \textit{True} or \textit{False}
+\State \algorithmickeyword{Initialize} \textit{visited}[0…$n$-1] with all entries 0
+\State \Return \textcolor{identifiercolor}{\textsc{CheckIfPathExists}}($s, t, \textit{scalingFactor}, \textit{residualGraph}, \textit{visited}$)
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{FindShortestPath}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{scalingFactor}, \textit{residualGraph}
+\State \algorithmickeyword{Initialize} \textit{parent}[0…$n$-1] $\gets -1$
+\State \textcolor{identifiercolor}{\textsc{ComputeShortestPathsFromSource}}($s, \textit{scalingFactor}, \textit{residualGraph}, \textit{parent}$)
+\State \algorithmickeyword{Initialize} \textit{shortestPath} $\gets \emptyset$
+\State \textit{k} $\gets t$
+\While{$k \neq -1$}
+    \State \textit{Add $k$ to the front of shortestPath}
+    \State $k \gets \textit{parent}[k]$
+\EndWhile
+\State \Return \textit{shortestPath}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{ComputeShortestPathsFromSource}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), \textit{scalingFactor}, \textit{residualGraph}, \textit{parent}
+\State \algorithmickeyword{Initialize} \textit{shortestDistance}[0…$n$-1] $\gets \infty$
+\State \textit{shortestDistance}[s] $\gets 0$
+\For{$i = 1$ to $n-1$}
+    \For{$j = 0$ to $n-1$}
+        \For{$k = 0$ to $n-1$}
+            \If{$j \neq k$ \algorithmickeyword{and} \textit{unitCost}[j][k] $\neq 0$}
+                \If{\textit{residualGraph}[j][k] $\geq \textit{scalingFactor}$}
+                    \If{\textit{shortestDistance}[k] - \textit{shortestDistance}[j] $> 1$}
+                        \State \textit{shortestDistance}[k] $\gets \textit{shortestDistance}[j] + 1$
+                        \State \textit{parent}[k] $\gets j$
+                    \EndIf
+                \EndIf
+            \EndIf
+        \EndFor
+    \EndFor
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{AugmentFlow}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} \textit{maxFlowThatCanBePushed}, \textit{adjacencyMatrix}, \textit{flow}, \textit{shortestPath}
+\State \algorithmickeyword{Output:} Updates the \textit{flow} matrix by augmenting the flow
+\For{\algorithmickeyword{each edge} $(u, v)$ \algorithmickeyword{in} \textit{shortestPath}}
+    \If{\textit{(u, v)} exists in the original network}
+        \State \textit{flow}[u][v] $\gets \textit{flow}[u][v] + \textit{maxFlowThatCanBePushed}$
+    \ElsIf{\textit{(v, u)} exists in the original network}
+        \State \textit{flow}[v][u] $\gets \textit{flow}[v][u] - \textit{maxFlowThatCanBePushed}$
+    \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Algorithm 3: Successive Shortest Paths with Scaling Factor (SC)}
+
+\textbf{Brief description of the working of Algorithm 3 (Successive Shortest Paths SC):}
+
+This algorithm uses a scaling factor, which is initialized to the maximum capacity of an edge in the source-sink network. The scaling factor is reduced by 2 when there is no augmenting path with residual capacity greater than or equal to the scaling factor. Because of this, we can reduce the total number of times we augment the flow, improving the runtime of the algorithm. When there is an augmenting path in the network, it selects the augmenting path with the minimum cost among all the augmenting paths. It then uses the capacity of that augmenting path to augment the flow in the network. After that, it computes the updated residual graph and updates the required total flow \(d\) that is yet to be pushed.~\cite{clrs}
+
+\textbf{Pseudo code for Algorithm 3:}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{IsAugmentingPathExists}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{scalingFactor}, \textit{residualGraph}
+\State \algorithmickeyword{Output:} \textit{True} or \textit{False}
+\State \algorithmickeyword{Initialize} \textit{visited}[0…$n$-1] with all entries 0
+\State \Return \textcolor{identifiercolor}{\textsc{CheckIfPathExists}}($s, t, \textit{scalingFactor}, \textit{residualGraph}, \textit{visited}$)
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{SuccessiveShortestPathsSC}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} \textit{graphFileName, s} (source node), \textit{t} (sink node), \textit{d} (required total flow)
+\State \textit{adjacencyMatrix} $\gets$ \textcolor{identifiercolor}{\textsc{CreateAdjacencyMatrixFromFile}}(\textit{graphFileName})
+\State \textit{cap} $\gets$ \textcolor{identifiercolor}{\textsc{CreateCapacityMatrixFromFile}}(\textit{graphFileName})
+\State \textit{unitCost} $\gets$ \textcolor{identifiercolor}{\textsc{CreateUnitCostMatrixFromFile}}(\textit{graphFileName})
+\State \algorithmickeyword{Initialize} \textit{flow} matrix to all zeros
+\State \textit{residualGraph} $\gets$ \textcolor{identifiercolor}{\textsc{ComputeResidualCapacity}}(\textit{residualGraph}, \textit{adjacencyMatrix}, \textit{flow}, \textit{cap})
+
+\If{$d = 0$}
+    \State \Return result with all fields set to 0
+\EndIf
+
+\State \textit{scalingFactor} $\gets$ \textcolor{identifiercolor}{\textsc{GetMaxCapacity}}(\textit{cap})
+
+\While{\textit{scalingFactor} $\geq 1$}
+    \While{$d > 0$ \algorithmickeyword{and} \textcolor{identifiercolor}{\textsc{IsAugmentingPathExists}}($s, t, \textit{scalingFactor}, \textit{residualGraph}$)}
+        \State \algorithmickeyword{Initialize} \textit{minCostPath} $\gets \emptyset$
+        \State \textit{maxFlowThatCanBePushed} $\gets$ \textcolor{identifiercolor}{\textsc{FindMaxFlowThatCanBePushed}}(\textit{minCostPath}, \textit{residualGraph})
+        \If{\textit{maxFlowThatCanBePushed} $> d$}
+            \State \textit{maxFlowThatCanBePushed} $\gets d$
+        \EndIf
+        \State \textcolor{identifiercolor}{\textsc{AugmentFlow}}(\textit{maxFlowThatCanBePushed}, \textit{adjacencyMatrix}, \textit{flow}, \textit{minCostPath})
+        \State \textcolor{identifiercolor}{\textsc{ComputeResidualCapacity}}(\textit{residualGraph}, \textit{adjacencyMatrix}, \textit{flow}, \textit{cap})
+        \State $d \gets d - \textit{maxFlowThatCanBePushed}$
+    \EndWhile
+    \State \textit{scalingFactor} $\gets \textit{scalingFactor} / 2$
+\EndWhile
+
+\State \textit{avgLengthOfAugmentingPath} $\gets$ \textit{sumOfLengthsOfAugmentingPaths} / \textit{numOfAugmentingPaths}
+\State \textit{longestAcyclicPath} $\gets$ \textcolor{identifiercolor}{\textsc{FindLengthOfLongestAcyclicPath}}(\textit{adjacencyMatrix}, $s, t$)
+\State \textit{meanProportionalLength} $\gets$ \textit{avgLengthOfAugmentingPath} / \textit{longestAcyclicPath}
+\State \textit{minCost} $\gets$ \textcolor{identifiercolor}{\textsc{FindCost}}(\textit{flow}, \textit{unitCost})
+\State \textit{flowValue} $\gets$ \textcolor{identifiercolor}{\textsc{GetFlowValue}}($s$, \textit{flow})
+\State \Return \textit{result}
+\end{algorithmic}
+\end{algorithm}
 
 
-% \subsubsection{Performance on SBM Dataset (10,000 Nodes)}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{CheckIfPathExists}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{scalingFactor}, \textit{residualGraph}, \textit{visited}
+\State \algorithmickeyword{Output:} \textit{True} or \textit{False}
+\If{$s = t$}
+    \State \Return \textit{True}
+\EndIf
+\State \textit{visited}[s] $\gets 1$
+\For{$i = 0$ to $n - 1$}
+    \If{\textit{residualGraph}[s][i] $\geq \textit{scalingFactor}$ \algorithmickeyword{and} \textit{visited}[i] = 0}
+        \If{\textcolor{identifiercolor}{\textsc{CheckIfPathExists}}($i, t, \textit{scalingFactor}, \textit{residualGraph}, \textit{visited}$)}
+            \State \Return \textit{True}
+        \EndIf
+    \EndIf
+\EndFor
+\State \Return \textit{False}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{AugmentFlow}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} \textit{maxFlowThatCanBePushed}, \textit{adjacencyMatrix}, \textit{flow}, \textit{minCostPath}
+\State \algorithmickeyword{Output:} Updates the \textit{flow} matrix by augmenting the flow
+\For{\algorithmickeyword{each edge} $(u, v)$ \algorithmickeyword{in} \textit{minCostPath}}
+    \If{\textit{(u, v)} exists in the original network}
+        \State \textit{flow}[u][v] $\gets \textit{flow}[u][v] + \textit{maxFlowThatCanBePushed}$
+    \ElsIf{\textit{(v, u)} exists in the original network}
+        \State \textit{flow}[v][u] $\gets \textit{flow}[v][u] - \textit{maxFlowThatCanBePushed}$
+    \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Algorithm 4: Primal-Dual Algorithm}
+
+\textbf{Description of the Primal-Dual Algorithm:}
+
+The Primal-Dual Algorithm is a method particularly effective for solving network flow problems such as the Minimum Cost Flow problem. The goal is to determine the minimum cost flow in a directed graph. This algorithm operates by iteratively adjusting the flow through a network while maintaining dual feasibility through node potentials and reduced costs. The approach ensures that each augmentation step is both feasible and cost-efficient, ultimately leading to an optimal flow configuration that satisfies the specified demand with minimal total cost.~\cite{topcoder, primaldual}
+
+\paragraph{Key Aspects:}
+\begin{itemize}
+    \item \textbf{Primal Aspect:} Focuses on adjusting flows along paths from the source to the sink to meet demand while respecting edge capacities.
+    \item \textbf{Dual Aspect:} Maintains node potentials to ensure that the reduced costs of edges remain non-negative, facilitating efficient path selection.
+\end{itemize}
+
+\paragraph{Steps:}
+\begin{enumerate}
+    \item Compute initial node potentials using the Bellman-Ford Algorithm. Although typically used to handle potential negative edge costs, this step does not check for negative costs since the graph does not include any.
+    \item Use a modified Dijkstra's Algorithm with reduced costs to identify the shortest augmenting path from the source to the sink.
+    \item Increase the flow along the identified path by the minimum residual capacity available on that path.
+    \item Adjust node potentials (\texttt{UpdatePotentials}) based on the latest distances (reduced costs) to maintain dual feasibility.
+    \item Repeat the path finding and augmentation steps until the demand is met or no further augmenting paths are available.
+\end{enumerate}
+
+\textbf{Pseudo code:}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{PrimalDualAlgo}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $G$ (directed graph), $s$ (source vertex), $t$ (sink vertex), \textit{demand} (required flow)
+\State \algorithmickeyword{Output:} \textit{AlgoResult} (result object containing total cost, total flow, path count, mean length, and mean proportional length)
+
+\State \textcolor{identifiercolor}{\textsc{InitializePotentials}}($G, s$)
+\State \textit{longestAcyclicPath} $\gets$ \textcolor{identifiercolor}{\textsc{FindLongestAcyclicPath}}($G, s, t$)
+
+\State \textit{totalFlow} $\gets 0$
+\State \textit{totalCost} $\gets 0.0$
+\State \textit{pathCount} $\gets 0$
+\State \textit{cumulativePathLength} $\gets 0$
+
+\While{\textit{totalFlow} $< \textit{demand}$}
+    \State \textit{pathResult} $\gets$ \textcolor{identifiercolor}{\textsc{Dijkstra}}($G, s, t$)
+    \State \textit{amount} $\gets \min$(\textit{pathResult.minCapacity}, \textit{demand} - \textit{totalFlow})
+    \State \textcolor{identifiercolor}{\textsc{AugmentFlow}}(\textit{pathResult}, \textit{amount}, $s, t$)
+    \State \textit{totalFlow} $\gets \textit{totalFlow} + \textit{amount}$
+    \State \textit{totalCost} $\gets \textit{totalCost} + (\textit{amount} \times \textit{pathResult.pathCost})$
+    \State \textit{pathCount} $\gets \textit{pathCount} + 1$
+    \State \textit{cumulativePathLength} $\gets \textit{cumulativePathLength} + (\textcolor{identifiercolor}{\textsc{Length}}(\textit{pathResult.path}) - 1)$
+    \State \textcolor{identifiercolor}{\textsc{UpdatePotentials}}(\textit{pathResult.distances})
+\EndWhile
+
+\If{\textit{pathCount} $> 0$}
+    \State \textit{meanLength} $\gets \textit{cumulativePathLength} / \textit{pathCount}$
+\Else
+    \State \textit{meanLength} $\gets 0.0$
+\EndIf
+
+\If{\textit{longestAcyclicPath} $> 0$}
+    \State \textit{meanProportionalLength} $\gets \textit{meanLength} / \textit{longestAcyclicPath}$
+\Else
+    \State \textit{meanProportionalLength} $\gets 0.0$
+\EndIf
+
+\State \Return \textcolor{identifiercolor}{\textsc{AlgoResult}}(\textit{totalCost}, \textit{totalFlow}, \textit{pathCount}, \textit{meanLength}, \textit{meanProportionalLength})
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{InitializePotentials}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $G$ (directed graph), $s$ (source vertex)
+\State \algorithmickeyword{Output:} Initializes potentials using Bellman-Ford without checking for negative costs
+\State \textit{distances} $\gets \infty$, \textit{predecessors} $\gets \text{Null}$
+\State \textit{distances}[$s$] $\gets 0$
+
+\For{$i = 1$ \textbf{to} $|V| - 1$}
+    \For{\algorithmickeyword{each edge} $(u, v)$ \algorithmickeyword{in} $G.E$}
+        \If{\textcolor{identifiercolor}{\textsc{RemainingCapacity}}($(u, v)$) $> 0$}
+            \State \textit{weight} $\gets$ \textcolor{identifiercolor}{\textsc{Cost}}($(u, v)$)
+            \If{\textit{distances}[$u$] + \textit{weight} $< \textit{distances}[v]$}
+                \State \textit{distances}[$v$] $\gets \textit{distances}[u] + \textit{weight}$
+                \State \textit{predecessors}[$v$] $\gets u$
+            \EndIf
+        \EndIf
+    \EndFor
+\EndFor
+
+\For{\algorithmickeyword{each vertex} $v$ \algorithmickeyword{in} $V$}
+    \State \textit{nodePotentials}[$v$] $\gets \textit{distances}[v]$
+\EndFor
+
+\State \Return \textit{true}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{Dijkstra}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $G$ (directed graph), $s$ (source vertex), $t$ (sink vertex)
+\State \algorithmickeyword{Output:} \textit{PathResult} (distances, predecessors, minCapacity, pathCost, path)
+
+\State \textit{distances} $\gets \infty$, \textit{predecessors} $\gets \text{Null}$
+\State \textit{distances}[$s$] $\gets 0$
+\State \textit{queue} $\gets$ \textcolor{identifiercolor}{\textsc{PriorityQueue}}($s$, $0$)
+
+\While{\textit{queue}.\textcolor{identifiercolor}{\textsc{isEmpty()}} = \textit{false}}
+    \State $u \gets$ \textcolor{identifiercolor}{\textsc{ExtractMin}}(\textit{queue})
+    \For{\algorithmickeyword{each edge} $(u, v)$ \algorithmickeyword{in} $G.E$}
+        \If{\textcolor{identifiercolor}{\textsc{RemainingCapacity}}($(u, v)$) $> 0$}
+            \State \textit{reducedCost} $\gets$ \textcolor{identifiercolor}{\textsc{Cost}}($(u, v)$) + \textit{nodePotentials}[$u$] - \textit{nodePotentials}[$v$]
+            \If{\textit{reducedCost} $< \textit{distances}[v] - \textit{distances}[u]$}
+                \State \textit{distances}[$v$] $\gets \textit{distances}[u] + \textit{reducedCost}$
+                \State \textit{predecessors}[$v$] $\gets u$
+                \State \textit{queue.enqueue}($v$, \textit{distances}[$v$])
+            \EndIf
+        \EndIf
+    \EndFor
+\EndWhile
+
+\State \textit{path} $\gets \textcolor{identifiercolor}{\textsc{EmptyList}}$
+\State $v \gets t$, \textit{minCapacity} $\gets \infty$, \textit{pathCost} $\gets 0.0$
+
+\While{$v \neq s$}
+    \State $e \gets \textit{predecessors}[v]$
+    \State \textit{minCapacity} $\gets \min(\textit{minCapacity}, \textcolor{identifiercolor}{\textsc{RemainingCapacity}}((e, v)))$
+    \State \textit{pathCost} $\gets \textit{pathCost} + \textcolor{identifiercolor}{\textsc{Cost}}((e, v))$
+    \State \textit{path.append}($v$)
+    \State $v \gets e$
+\EndWhile
+
+\State \textit{path.append}($s$)
+\State \textcolor{identifiercolor}{\textsc{Reverse}}(\textit{path})
+
+\State \textit{result} $\gets \textcolor{identifiercolor}{\textsc{PathResult}}$
+\State \textit{result.distances} $\gets \textit{distances}$
+\State \textit{result.predecessors} $\gets \textit{predecessors}$
+\State \textit{result.minCapacity} $\gets \textit{minCapacity}$
+\State \textit{result.pathCost} $\gets \textit{pathCost}$
+\State \textit{result.path} $\gets \textit{path}$
+\State \Return \textit{result}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{UpdatePotentials}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} \textit{distances} (the distance of all vertices from the source)
+\For{\algorithmickeyword{each vertex} $v$ \algorithmickeyword{in} $G$}
+    \If{\textit{distances}[$v$] $< \infty$}
+        \State \textit{nodePotentials}[$v$] $\gets \textit{nodePotentials}[v] + \textit{distances}[v]$
+    \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\section{Implementation correctness}
+
+To ensure the correctness of our implementation, we developed a dedicated testing class named \texttt{Test}, which validates the results of all four algorithms. We used three different source-sink graphs with 5, 11, and 26 edges, respectively. Since these graphs are relatively small, we manually computed the expected values for minimum cost and flow for all four algorithms and stored them in a 2-D array, \texttt{expectedFlowAndMinCost}. 
+
+The graphs were saved in three separate files: \texttt{graph-test-1.txt}, \texttt{graph-test-2.txt}, and \texttt{graph-test-3.txt}. The \texttt{Test} class executes each algorithm on these graph files and compares the output with the precomputed expected values. If the outputs match, the test passes; otherwise, it fails. The results of each test are clearly displayed on the console.
+
+In addition to this structured testing approach, we ran the algorithms multiple times to ensure consistency and reliability. No issues were observed during these runs. We also compared metrics such as the number of augmenting paths and the minimum cost across the algorithms to detect any unexpected behavior. All comparisons confirmed the correctness of our implementation, with all algorithms performing as expected.
+
+\section{Results}
+
+\subsection{Tables}
+
+\begin{table}[H]
+\centering
+\caption{Simulation 1: Graph Characteristics}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Graph} & \textbf{n} & \textbf{r} & \textbf{upperCap} & \textbf{upperCost} & \textbf{fMax} & \textbf{nodesInLCC} & \textbf{maxOutDegree} & \textbf{maxInDegree} & \textbf{avgDegree} \\ \hline
+1              & 100        & 0.2        & 8                 & 5                  & 6             & 95                  & 10                   & 11                   & 4.305             \\ \hline
+2              & 200        & 0.2        & 8                 & 5                  & 9             & 200                 & 18                   & 17                   & 8.815             \\ \hline
+3              & 100        & 0.3        & 8                 & 5                  & 10            & 100                 & 19                   & 21                   & 9.690             \\ \hline
+4              & 200        & 0.3        & 8                 & 5                  & 56            & 200                 & 32                   & 34                   & 18.095            \\ \hline
+5              & 100        & 0.2        & 64                & 20                 & 45            & 99                  & 10                   & 11                   & 4.273             \\ \hline
+6              & 200        & 0.2        & 64                & 20                 & 74            & 200                 & 17                   & 21                   & 8.290             \\ \hline
+7              & 100        & 0.3        & 64                & 20                 & 38            & 100                 & 19                   & 19                   & 9.450             \\ \hline
+8              & 200        & 0.3        & 64                & 20                 & 326           & 200                 & 29                   & 30                   & 17.335            \\ \hline
+\end{tabular}
+}
+\label{tab:simulation1_graph_characteristics}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Simulation 1: Algorithm Performance Metrics}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Algorithm} & \textbf{Graph} & \textbf{Flow (f)} & \textbf{Min Cost (MC)} & \textbf{Paths} & \textbf{Mean Length (ML)} & \textbf{Mean Proportional Length (MPL)} \\ \hline
+SSP                & 1              & 5                 & 203.0                  & 4              & 15.000                   & 0.300                                  \\ \hline
+CS                 & 1              & 5                 & 217.0                  & 3              & 14.333                   & 0.287                                  \\ \hline
+SSPCS              & 1              & 5                 & 203.0                  & 3              & 15.000                   & 0.300                                  \\ \hline
+PD                 & 1              & 5                 & 201.0                  & 4              & 17.750                   & 0.222                                  \\ \hline
+SSP                & 2              & 8                 & 102.0                  & 9              & 10.111                   & 0.060                                  \\ \hline
+CS                 & 2              & 8                 & 166.0                  & 6              & 10.167                   & 0.061                                  \\ \hline
+SSPCS              & 2              & 8                 & 122.0                  & 6              & 10.667                   & 0.063                                  \\ \hline
+PD                 & 2              & 8                 & 101.0                  & 5              & 6.000                    & 0.033                                  \\ \hline
+SSP                & 3              & 9                 & 86.0                   & 16             & 8.500                    & 0.104                                  \\ \hline
+CS                 & 3              & 9                 & 122.0                  & 9              & 8.556                    & 0.104                                  \\ \hline
+SSPCS              & 3              & 9                 & 89.0                   & 9              & 9.111                    & 0.111                                  \\ \hline
+PD                 & 3              & 9                 & 86.0                   & 7              & 6.571                    & 0.069                                  \\ \hline
+SSP                & 4              & 53                & 582.0                  & 54             & 7.111                    & 0.037                                  \\ \hline
+CS                 & 4              & 53                & 1297.0                 & 20             & 7.600                    & 0.039                                  \\ \hline
+SSPCS              & 4              & 53                & 1217.0                 & 21             & 8.524                    & 0.044                                  \\ \hline
+PD                 & 4              & 53                & 571.0                  & 39             & 8.308                    & 0.044                                  \\ \hline
+SSP                & 5              & 42                & 3732.0                 & 66             & 8.439                    & 0.196                                  \\ \hline
+CS                 & 5              & 42                & 4918.0                 & 24             & 8.375                    & 0.195                                  \\ \hline
+SSPCS              & 5              & 42                & 4129.0                 & 25             & 9.560                    & 0.222                                  \\ \hline
+PD                 & 5              & 42                & 3664.0                 & 13             & 13.769                   & 0.181                                  \\ \hline
+SSP                & 6              & 70                & 3587.0                 & 79             & 9.114                    & 0.055                                  \\ \hline
+CS                 & 6              & 70                & 6724.0                 & 28             & 8.321                    & 0.050                                  \\ \hline
+SSPCS              & 6              & 70                & 3802.0                 & 30             & 10.100                   & 0.060                                  \\ \hline
+PD                 & 6              & 70                & 3577.0                 & 14             & 13.929                   & 0.083                                  \\ \hline
+SSP                & 7              & 36                & 1332.0                 & 83             & 9.048                    & 0.113                                  \\ \hline
+CS                 & 7              & 36                & 2087.0                 & 31             & 8.129                    & 0.102                                  \\ \hline
+SSPCS              & 7              & 36                & 1367.0                 & 33             & 9.970                    & 0.125                                  \\ \hline
+PD                 & 7              & 36                & 1332.0                 & 3              & 7.333                    & 0.088                                  \\ \hline
+SSP                & 8              & 309               & 8849.0                 & 141            & 8.879                    & 0.048                                  \\ \hline
+CS                 & 8              & 309               & 16749.0                & 43             & 7.302                    & 0.039                                  \\ \hline
+SSPCS              & 8              & 309               & 10253.0                & 47             & 9.362                    & 0.051                                  \\ \hline
+PD                 & 8              & 309               & 8673.0                 & 84             & 11.655                   & 0.076                                  \\ \hline
+\end{tabular}%
+}
+\label{tab:simulation1_algorithm_metrics}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Simulation 2, Set 1: Graph Characteristics}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Graph} & \textbf{n} & \textbf{r} & \textbf{upperCap} & \textbf{upperCost} & \textbf{fMax} & \textbf{nodesInLCC} & \textbf{maxOutDegree} & \textbf{maxInDegree} & \textbf{avgDegree} \\ \hline
+9              & 100        & 0.9        & 8                 & 5                  & 139           & 100                 & 50                   & 49                   & 38.080            \\ \hline
+10             & 200        & 0.9        & 8                 & 5                  & 357           & 200                 & 98                   & 100                  & 79.745            \\ \hline
+11             & 100        & 0.9        & 64                & 20                 & 1148          & 100                 & 52                   & 52                   & 39.480            \\ \hline
+12             & 200        & 0.9        & 64                & 20                 & 2616          & 200                 & 100                  & 100                  & 77.175            \\ \hline
+\end{tabular}%
+}
+\label{tab:simulation2_set1_graph_characteristics}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Simulation 2, Set 1: Algorithm Performance Metrics}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Algorithm} & \textbf{Graph} & \textbf{Flow (f)} & \textbf{Min Cost (MC)} & \textbf{Paths} & \textbf{Mean Length (ML)} & \textbf{Mean Proportional Length (MPL)} \\ \hline
+SSP                & 9              & 132               & 938.0                  & 67             & 3.478                     & 0.036                                   \\ \hline
+CS                 & 9              & 132               & 1277.0                 & 34             & 2.971                     & 0.031                                   \\ \hline
+SSPCS              & 9              & 132               & 1094.0                 & 39             & 3.462                     & 0.036                                   \\ \hline
+PD                 & 9              & 132               & 899.0                  & 80             & 4.600                     & 0.047                                   \\ \hline
+SSP                & 10             & 339               & 2187.0                 & 233            & 3.210                     & 0.016                                   \\ \hline
+CS                 & 10             & 339               & 2773.0                 & 124            & 2.903                     & 0.015                                   \\ \hline
+SSPCS              & 10             & 339               & 2443.0                 & 130            & 3.315                     & 0.017                                   \\ \hline
+PD                 & 10             & 339               & 2078.0                 & 206            & 4.796                     & 0.024                                   \\ \hline
+SSP                & 11             & 1090              & 24791.0                & 334            & 3.437                     & 0.035                                   \\ \hline
+CS                 & 11             & 1090              & 32541.0                & 170            & 2.900                     & 0.030                                   \\ \hline
+SSPCS              & 11             & 1090              & 26854.0                & 172            & 3.430                     & 0.035                                   \\ \hline
+PD                 & 11             & 1090              & 24017.0                & 173            & 7.538                     & 0.076                                   \\ \hline
+SSP                & 12             & 2485              & 53223.0                & 560            & 3.646                     & 0.019                                   \\ \hline
+CS                 & 12             & 2485              & 73211.0                & 261            & 2.904                     & 0.015                                   \\ \hline
+SSPCS              & 12             & 2485              & 61673.0                & 280            & 3.668                     & 0.019                                   \\ \hline
+PD                 & 12             & 2485              & 50584.0                & 545            & 9.268                     & 0.047                                   \\ \hline
+\end{tabular}%
+}
+\label{tab:simulation2_set1_algorithm_metrics}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Simulation 2, Set 2: Graph Characteristics}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Graph} & \textbf{n} & \textbf{r} & \textbf{upperCap} & \textbf{upperCost} & \textbf{fMax} & \textbf{nodesInLCC} & \textbf{maxOutDegree} & \textbf{maxInDegree} & \textbf{avgDegree} \\ \hline
+13             & 100        & 0.1        & 8                 & 5                  & 2             & 8                   & 2                    & 2                    & 1.125             \\ \hline
+14             & 200        & 0.1        & 8                 & 5                  & 5             & 108                 & 9                    & 7                    & 2.981             \\ \hline
+15             & 100        & 0.1        & 64                & 20                 & 9             & 15                  & 4                    & 3                    & 1.467             \\ \hline
+16             & 200        & 0.1        & 64                & 20                 & 3             & 93                  & 6                    & 9                    & 2.720             \\ \hline
+\end{tabular}%
+}
+\label{tab:simulation2_set2_graph_characteristics}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Simulation 2, Set 2: Algorithm Performance Metrics}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Algorithm} & \textbf{Graph} & \textbf{Flow (f)} & \textbf{Min Cost (MC)} & \textbf{Paths} & \textbf{Mean Length (ML)} & \textbf{Mean Proportional Length (MPL)} \\ \hline
+SSP                & 13             & 1                 & 15.0                   & 1              & 6.000                     & 0.857                                   \\ \hline
+CS                 & 13             & 1                 & 15.0                   & 1              & 6.000                     & 0.857                                   \\ \hline
+SSPCS              & 13             & 1                 & 15.0                   & 1              & 6.000                     & 0.857                                   \\ \hline
+PD                 & 13             & 1                 & 15.0                   & 1              & 6.000                     & 0.750                                   \\ \hline
+SSP                & 14             & 4                 & 204.0                  & 5              & 17.400                    & 0.378                                   \\ \hline
+CS                 & 14             & 4                 & 244.0                  & 2              & 13.500                    & 0.293                                   \\ \hline
+SSPCS              & 14             & 4                 & 212.0                  & 2              & 13.500                    & 0.293                                   \\ \hline
+PD                 & 14             & 4                 & 204.0                  & 4              & 20.750                    & 0.648                                   \\ \hline
+SSP                & 15             & 8                 & 708.0                  & 7              & 15.000                    & 1.250                                   \\ \hline
+CS                 & 15             & 8                 & 904.0                  & 3              & 12.000                    & 1.000                                   \\ \hline
+SSPCS              & 15             & 8                 & 776.0                  & 3              & 12.000                    & 1.000                                   \\ \hline
+PD                 & 15             & 8                 & 708.0                  & 2              & 9.000                     & 0.818                                   \\ \hline
+SSP                & 16             & 2                 & 438.0                  & 8              & 16.750                    & 0.356                                   \\ \hline
+CS                 & 16             & 2                 & 510.0                  & 4              & 15.750                    & 0.335                                   \\ \hline
+SSPCS              & 16             & 2                 & 438.0                  & 4              & 16.250                    & 0.346                                   \\ \hline
+PD                 & 16             & 2                 & 438.0                  & 1              & 29.000                    & 0.537                                   \\ \hline
+\end{tabular}%
+}
+\label{tab:simulation2_set2_algorithm_metrics}
+\end{table}
 
 
-\subsubsection{Performance Summary Tables}
+\begin{table}[H]
+\centering
+\caption{Simulation 2, Set 3: Graph Characteristics}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Graph} & \textbf{n} & \textbf{r} & \textbf{upperCap} & \textbf{upperCost} & \textbf{fMax} & \textbf{nodesInLCC} & \textbf{maxOutDegree} & \textbf{maxInDegree} & \textbf{avgDegree} \\ \hline
+17             & 100        & 0.2        & 8                 & 1                  & 7             & 96                  & 14                   & 12                   & 5.083             \\ \hline
+18             & 200        & 0.3        & 8                 & 1                  & 35            & 200                 & 40                   & 37                   & 18.740            \\ \hline
+19             & 100        & 0.2        & 64                & 1                  & 8             & 98                  & 9                    & 9                    & 4.194             \\ \hline
+20             & 200        & 0.3        & 64                & 1                  & 246           & 200                 & 36                   & 34                   & 17.865            \\ \hline
+\end{tabular}%
+}
+\label{tab:simulation2_set3_graph_characteristics}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Simulation 2, Set 3: Algorithm Performance Metrics}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Algorithm} & \textbf{Graph} & \textbf{Flow (f)} & \textbf{Min Cost (MC)} & \textbf{Paths} & \textbf{Mean Length (ML)} & \textbf{Mean Proportional Length (MPL)} \\ \hline
+SSP                & 17             & 6                 & 51.0                   & 4              & 8.750                     & 0.133                                   \\ \hline
+CS                 & 17             & 6                 & 54.0                   & 2              & 9.000                     & 0.136                                   \\ \hline
+SSPCS              & 17             & 6                 & 54.0                   & 2              & 9.000                     & 0.136                                   \\ \hline
+PD                 & 17             & 6                 & 51.0                   & 4              & 8.750                     & 0.162                                   \\ \hline
+SSP                & 18             & 33                & 194.0                  & 27             & 6.296                     & 0.034                                   \\ \hline
+CS                 & 18             & 33                & 226.0                  & 12             & 6.750                     & 0.037                                   \\ \hline
+SSPCS              & 18             & 33                & 226.0                  & 12             & 6.750                     & 0.037                                   \\ \hline
+PD                 & 18             & 33                & 190.0                  & 23             & 6.435                     & 0.041                                   \\ \hline
+SSP                & 19             & 7                 & 70.0                   & 30             & 6.667                     & 0.106                                   \\ \hline
+CS                 & 19             & 7                 & 70.0                   & 13             & 7.000                     & 0.111                                   \\ \hline
+SSPCS              & 19             & 7                 & 70.0                   & 13             & 7.000                     & 0.111                                   \\ \hline
+PD                 & 19             & 7                 & 70.0                   & 3              & 10.000                    & 0.182                                   \\ \hline
+SSP                & 20             & 233               & 1256.0                 & 57             & 6.070                     & 0.034                                   \\ \hline
+CS                 & 20             & 233               & 1294.0                 & 24             & 6.375                     & 0.036                                   \\ \hline
+SSPCS              & 20             & 233               & 1294.0                 & 24             & 6.375                     & 0.036                                   \\ \hline
+PD                 & 20             & 233               & 1238.0                 & 27             & 6.333                     & 0.035                                   \\ \hline
+\end{tabular}%
+}
+\label{tab:simulation2_set3_algorithm_metrics}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Simulation 2, Set 4: Graph Characteristics}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Graph} & \textbf{n} & \textbf{r} & \textbf{upperCap} & \textbf{upperCost} & \textbf{fMax} & \textbf{nodesInLCC} & \textbf{maxOutDegree} & \textbf{maxInDegree} & \textbf{avgDegree} \\ \hline
+21             & 100        & 0.9        & 8                 & 1                  & 113           & 100                 & 52                   & 55                   & 38.680            \\ \hline
+22             & 200        & 0.9        & 8                 & 1                  & 332           & 200                 & 104                  & 102                  & 79.020            \\ \hline
+23             & 100        & 0.9        & 64                & 1                  & 1063          & 100                 & 51                   & 52                   & 39.710            \\ \hline
+24             & 200        & 0.9        & 64                & 1                  & 2566          & 200                 & 103                  & 103                  & 79.135            \\ \hline
+\end{tabular}%
+}
+\label{tab:simulation2_set4_graph_characteristics}
+\end{table}
 
 
-% \subsection{Discussion}
+\begin{table}[H]
+\centering
+\caption{Simulation 2, Set 4: Algorithm Performance Metrics}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Algorithm} & \textbf{Graph} & \textbf{Flow (f)} & \textbf{Min Cost (MC)} & \textbf{Paths} & \textbf{Mean Length (ML)} & \textbf{Mean Proportional Length (MPL)} \\ \hline
+SSP                & 21             & 107               & 290.0                  & 43             & 2.791                     & 0.028                                   \\ \hline
+CS                 & 21             & 107               & 322.0                  & 26             & 2.846                     & 0.029                                   \\ \hline
+SSPCS              & 21             & 107               & 322.0                  & 26             & 2.846                     & 0.029                                   \\ \hline
+PD                 & 21             & 107               & 290.0                  & 51             & 3.137                     & 0.032                                   \\ \hline
+SSP                & 22             & 315               & 860.0                  & 188            & 2.782                     & 0.014                                   \\ \hline
+CS                 & 22             & 315               & 937.0                  & 114            & 2.860                     & 0.014                                   \\ \hline
+SSPCS              & 22             & 315               & 937.0                  & 114            & 2.860                     & 0.014                                   \\ \hline
+PD                 & 22             & 315               & 860.0                  & 153            & 3.497                     & 0.018                                   \\ \hline
+SSP                & 23             & 1009              & 2843.0                 & 257            & 2.813                     & 0.029                                   \\ \hline
+CS                 & 23             & 1009              & 2867.0                 & 150            & 2.867                     & 0.029                                   \\ \hline
+SSPCS              & 23             & 1009              & 2867.0                 & 150            & 2.867                     & 0.029                                   \\ \hline
+PD                 & 23             & 1009              & 2843.0                 & 83             & 3.566                     & 0.036                                   \\ \hline
+SSP                & 24             & 2437              & 6669.0                 & 429            & 2.818                     & 0.014                                   \\ \hline
+CS                 & 24             & 2437              & 6876.0                 & 244            & 2.857                     & 0.014                                   \\ \hline
+SSPCS              & 24             & 2437              & 6913.0                 & 242            & 2.860                     & 0.014                                   \\ \hline
+PD                 & 24             & 2437              & 6669.0                 & 200            & 3.460                     & 0.017                                   \\ \hline
+\end{tabular}%
+}
+\label{tab:simulation2_set4_algorithm_metrics}
+\end{table}
 
+
+\begin{table}[H]
+\centering
+\caption{Simulation 2, Set 5: Graph Characteristics}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Graph} & \textbf{n} & \textbf{r} & \textbf{upperCap} & \textbf{upperCost} & \textbf{fMax} & \textbf{nodesInLCC} & \textbf{maxOutDegree} & \textbf{maxInDegree} & \textbf{avgDegree} \\ \hline
+25             & 100        & 0.5        & 1                 & 5                  & 16            & 100                 & 33                   & 33                   & 18.290            \\ \hline
+26             & 200        & 0.5        & 1                 & 5                  & 27            & 200                 & 67                   & 70                   & 39.310            \\ \hline
+27             & 100        & 0.5        & 1                 & 20                 & 7             & 100                 & 37                   & 40                   & 20.180            \\ \hline
+28             & 200        & 0.5        & 1                 & 20                 & 16            & 200                 & 77                   & 75                   & 41.950            \\ \hline
+\end{tabular}%
+}
+\label{tab:simulation2_set5_graph_characteristics}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Simulation 2, Set 5: Algorithm Performance Metrics}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Algorithm} & \textbf{Graph} & \textbf{Flow (f)} & \textbf{Min Cost (MC)} & \textbf{Paths} & \textbf{Mean Length (ML)} & \textbf{Mean Proportional Length (MPL)} \\ \hline
+SSP                & 25             & 15                & 116.0                  & 15             & 3.867                     & 0.042                                   \\ \hline
+CS                 & 25             & 15                & 142.0                  & 15             & 3.400                     & 0.037                                   \\ \hline
+SSPCS              & 25             & 15                & 116.0                  & 15             & 3.867                     & 0.042                                   \\ \hline
+PD                 & 25             & 15                & 111.0                  & 15             & 5.400                     & 0.057                                   \\ \hline
+SSP                & 26             & 25                & 166.0                  & 40             & 3.750                     & 0.019                                   \\ \hline
+CS                 & 26             & 25                & 244.0                  & 40             & 3.325                     & 0.017                                   \\ \hline
+SSPCS              & 26             & 25                & 166.0                  & 40             & 3.750                     & 0.019                                   \\ \hline
+PD                 & 26             & 25                & 164.0                  & 25             & 4.680                     & 0.024                                   \\ \hline
+SSP                & 27             & 6                 & 102.0                  & 46             & 3.913                     & 0.042                                   \\ \hline
+CS                 & 27             & 6                 & 222.0                  & 46             & 3.391                     & 0.036                                   \\ \hline
+SSPCS              & 27             & 6                 & 102.0                  & 46             & 3.913                     & 0.042                                   \\ \hline
+PD                 & 27             & 6                 & 102.0                  & 6              & 5.000                     & 0.052                                   \\ \hline
+SSP                & 28             & 15                & 257.0                  & 61             & 4.148                     & 0.021                                   \\ \hline
+CS                 & 28             & 15                & 479.0                  & 61             & 3.311                     & 0.017                                   \\ \hline
+SSPCS              & 28             & 15                & 257.0                  & 61             & 4.148                     & 0.021                                   \\ \hline
+PD                 & 28             & 15                & 253.0                  & 15             & 7.267                     & 0.037                                   \\ \hline
+\end{tabular}%
+}
+\label{tab:simulation2_set5_algorithm_metrics}
+\end{table}
+
+\subsection{Simulation Results and Observations}
+
+The performance of the four algorithms was evaluated on various graph datasets generated with different configurations. Below, we summarize the key observations and results obtained across different simulation sets.
+
+\subsubsection{Input Set 1}
+\paragraph{Description:}
+We chose the value of \( r \) to be very high (\( r = 0.9 \)) while keeping the other parameters the same as in Simulations 1. A high \( r \) implies that every node is connected to a higher number of nodes, resulting in higher degrees for all nodes. This configuration increases the number of paths between the source and target, often leading to shorter path lengths compared to Simulations 1.
+
+\paragraph{Observation 1:}
+In Simulations 1, where \( r = 0.2 \) or \( r = 0.3 \), the minimum cost of Algorithm 2 was approximately 30\% higher than the second worst algorithm. However, in Simulations 2, the minimum cost of Algorithm 2 is only 10\% higher than the second worst algorithm. Although Algorithm 2 remains the worst-performing algorithm, it shows comparatively better performance with a very high \( r \). This improvement is due to the increased availability of shorter paths with lower costs, as the edge costs are uniformly distributed between 1 and the \( \text{upperCost} \).
+
+\paragraph{Observation 2:}
+In Simulations 1, where \( r = 0.2 \) or \( r = 0.3 \), Algorithm 1's minimum cost was closer to the optimal minimum cost achieved by the Primal-Dual algorithm (Algorithm 4). However, in this input set with \( r = 0.9 \), the performance of Algorithm 1 is not as close to the optimal. This discrepancy can be attributed to Algorithm 1's dependency on minimum cost paths and its greedy strategy, which does not perform as effectively in graphs with very high degrees.
+
+\paragraph{Other Observations:}
+\begin{itemize}
+    \item Algorithm 3 continues to perform better than Algorithm 2 but does not surpass Algorithm 1.
+    \item The mean length of augmenting paths in Algorithm 4 is significantly higher than that of the other algorithms.
+\end{itemize}
+
+\subsubsection{Input Set 2}
+\paragraph{Description:}
+For this input set, we chose a very low value of \( r \) (\( r = 0.1 \)), while keeping the other parameters the same. A low \( r \) results in a reduced number of edges, creating very sparse graphs.
+
+\paragraph{Observations:}
+In this scenario, all the algorithms exhibit almost identical behavior. Due to the sparsity of the graphs, there are fewer paths from the source to the sink, increasing the likelihood that all algorithms identify the same augmenting paths.
+
+\subsubsection{Input Set 3}
+\paragraph{Description:}
+In this input set, we set the \( \text{upperCap} \) to 1 while keeping all other parameters the same as in Simulations 1. This configuration ensures that every edge has a unit cost of 1.
+
+\paragraph{Observation 1:}
+Algorithms 2 and 3 exhibit identical behavior in this scenario. Since \( \text{upperCap} = 1 \), every edge has a unit cost of 1, making the shortest path equivalent to the minimum cost path. Additionally, as both algorithms use the same scaling factor, they consistently select the same augmenting paths. As a result, the metrics such as minimum cost, number of augmenting paths, mean length (ML), and mean proportional length (MPL) are identical for both Algorithms 2 and 3.
+
+\paragraph{Observation 2:}
+Algorithm 1 achieves the minimum cost value equivalent to the optimal cost in most instances. This outcome is attributed to both PD (Algorithm 4) and SSP (Algorithm 1) dealing with minimum cost paths. However, the greedy nature of SSP typically poses a drawback. In this case, since \( \text{upperCap} = 1 \), the impact of the greedy approach is minimized, leading to competitive performance.
+
+
+\subsubsection{Input Set 4}
+\paragraph{Description:}
+In this input set, we set \( r = 0.9 \) and \( \text{upperCost} = 1 \). This configuration ensures a dense graph with a uniform edge cost.
+
+\paragraph{Observation 1:}
+Algorithms 2 and 3 exhibit the same behavior, as observed in the previous input set, since \( \text{upperCap} = 1 \) in this set as well. However, a notable difference is that Algorithm 2, which generally performs the worst, achieves a minimum cost value very close to the optimal. This can be explained by the equivalence of shortest paths and minimum cost paths in this scenario. The only factor causing Algorithm 2's performance to lag is the use of the scaling factor, which slightly increases its minimum cost.
+
+
+\subsubsection{Input Set 5}
+\paragraph{Description:}
+In this input set, we set \( \text{upperCap} = 1 \), ensuring all edges have uniform capacity.
+
+\paragraph{Observation 1:}
+Since \( \text{upperCap} = 1 \), the scaling factor has no effect, resulting in Algorithm 3 behaving exactly the same as Algorithm 1. Consequently, both algorithms yield identical values for minimum cost and the number of augmenting paths.
+
+\paragraph{Observation 2:}
+Algorithms 1, 3, and 4 produce nearly identical minimum cost values. However, Algorithm 2 performs significantly worse than the others. This disparity arises from Algorithm 2's reliance solely on shortest paths, disregarding minimum cost paths, which leads to suboptimal performance.
+
+
+\subsection{Conclusion and Common Observations}
+\paragraph{}
+Across all input sets, we observed distinct patterns in the performance of the algorithms. These patterns can be summarized as follows:
+
+\begin{itemize}
+    \item The number of augmenting paths in Algorithm 1 is consistently greater than or equal to that in Algorithm 3. This is because Algorithm 3 uses a scaling factor, which reduces the number of augmenting paths. If minimizing the number of augmenting paths is a priority and we are not overly concerned with achieving the most accurate minimum cost, Algorithm 3 is a suitable choice.
+    
+    \item The Primal-Dual algorithm (Algorithm 4) consistently delivers the optimal minimum cost, outperforming the other algorithms in this metric. If achieving the best minimum cost is essential, Algorithm 4 should be the preferred choice.
+    
+    \item Algorithm 2 performs the worst in terms of minimum cost across almost all input sets. However, it may still be a viable option in scenarios where the output is influenced primarily by the distance between the source and target, and the minimum cost paths are less critical. In such cases, Algorithm 2 can be chosen for its reduced number of augmenting paths, provided a lower accuracy is acceptable.
+\end{itemize}
+
+\paragraph{}
+These observations provide clear insights into the trade-offs among the algorithms, enabling informed decisions based on the specific requirements of the application.
 
 \section{Conclusion}
+\paragraph{}
+This study compares four algorithms for solving the minimum-cost flow problem using different graph settings. The results highlight the strengths and weaknesses of each algorithm and help in understanding which one is better for specific situations.
 
+\paragraph{}
+Algorithm 1 (Successive Shortest Path) works well in finding minimum cost paths, especially in graphs with fewer edges. However, because it uses a greedy method, it does not perform as well in very dense graphs. Algorithm 3, which uses a scaling factor, needs fewer augmenting paths compared to Algorithm 1 but is slightly less accurate in finding the minimum cost. This makes Algorithm 3 a good option when reducing the number of augmenting paths is more important than getting the exact minimum cost.
+
+\paragraph{}
+Algorithm 2 performs worse than the others in minimizing cost in most input sets. However, it works better in graphs with high edge density (\( r \)) and uniform edge costs. Since Algorithm 2 focuses only on shortest paths, it may be useful in cases where the number of augmenting paths is more important than minimizing cost.
+
+\paragraph{}
+The Primal-Dual algorithm (Algorithm 4) is the best in finding the lowest cost in all graph settings. It performs well in both dense and sparse graphs, making it the best choice for applications where minimizing cost is the main goal.
+
+\paragraph{}
+The results show that the number of augmenting paths depends on the algorithm and graph properties. Algorithms that use scaling factors, like Algorithm 3, need fewer paths, while greedy algorithms, like Algorithm 1, use more paths. This shows the importance of choosing an algorithm based on the specific needs of the problem.
+
+\paragraph{}
+In summary, this study provides useful insights into the performance of these four algorithms. For applications where achieving the lowest cost is important, the Primal-Dual algorithm is the best choice. When efficiency or reducing augmenting paths is more important, Algorithms 1 and 3 are good options. Algorithm 2, while not optimal in cost, can work well in special cases where shortest paths are enough. These results help in deciding which algorithm to use for different real-world problems related to the minimum-cost flow problem.
+
+\section{Team Work Distribution}
+\textcolor{red}{TODO}
 
 \bibliography{ref}
 
