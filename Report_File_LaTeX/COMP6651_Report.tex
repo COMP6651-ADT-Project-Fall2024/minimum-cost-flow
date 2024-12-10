@@ -19,7 +19,7 @@
 \usepackage{amsmath}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
-
+\usepackage{hhline}
 \usepackage{xcolor}
 
 % Define custom colors
@@ -480,6 +480,52 @@ This algorithm uses a scaling factor, which is initialized to the maximum capaci
 \end{algorithm}
 
 \begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{FindMinimumCostPath}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), $t$ (sink node), \textit{scalingFactor}, \textit{unitCost}, \textit{residualGraph}
+\State \algorithmickeyword{Output:} \textit{minCostPath} (the minimum cost path from $s$ to $t$)
+
+\State \algorithmickeyword{Initialize} \textit{parent}[0…$n$-1] $\gets -1$
+\State \textcolor{identifiercolor}{\textsc{ComputeMinCostPathsFromSource}}($s$, \textit{scalingFactor}, \textit{unitCost}, \textit{residualGraph}, \textit{parent})
+
+\State \algorithmickeyword{Initialize} \textit{minCostPath} $\gets \emptyset$
+\State \textit{k} $\gets t$
+\While{$k \neq -1$}
+    \State \textit{Add} $k$ to the front of \textit{minCostPath}
+    \State $k \gets \textit{parent}[k]$
+\EndWhile
+
+\State \Return \textit{minCostPath}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{\textcolor{keywordcolor}{\textsc{ComputeMinCostPathsFromSource}}}
+\begin{algorithmic}[1]
+\State \algorithmickeyword{Inputs:} $s$ (source node), \textit{scalingFactor}, \textit{unitCost}, \textit{residualGraph}, \textit{parent}
+\State \algorithmickeyword{Output:} Updates \textit{minCost} and \textit{parent} arrays to store shortest paths
+
+\State \algorithmickeyword{Initialize} \textit{minCost}[0…$n$-1] $\gets \infty$
+\State \textit{minCost}[$s$] $\gets 0$
+
+\For{$i = 1$ \textbf{to} $n - 1$}
+    \For{$j = 0$ \textbf{to} $n - 1$}
+        \For{$k = 0$ \textbf{to} $n - 1$}
+            \If{$j \neq k$ \algorithmickeyword{and} \textit{unitCost}[$j$][$k$] $\neq 0$}
+                \If{\textit{residualGraph}[$j$][$k$] $\geq \textit{scalingFactor}$}
+                    \If{\textit{minCost}[$k$] - \textit{minCost}[$j$] $> \textit{unitCost}[$j$][$k$]$}
+                        \State \textit{minCost}[$k$] $\gets \textit{minCost}[$j$] + \textit{unitCost}[$j$][$k$]$
+                        \State \textit{parent}[$k$] $\gets j$
+                    \EndIf
+                \EndIf
+            \EndIf
+        \EndFor
+    \EndFor
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
 \caption{\textcolor{keywordcolor}{\textsc{AugmentFlow}}}
 \begin{algorithmic}[1]
 \State \algorithmickeyword{Inputs:} \textit{maxFlowThatCanBePushed}, \textit{adjacencyMatrix}, \textit{flow}, \textit{minCostPath}
@@ -748,30 +794,37 @@ SSP                & 1              & 5                 & 203.0                 
 CS                 & 1              & 5                 & 217.0                  & 3              & 14.333                   & 0.287                                  \\ \hline
 SSPCS              & 1              & 5                 & 203.0                  & 3              & 15.000                   & 0.300                                  \\ \hline
 PD                 & 1              & 5                 & 201.0                  & 4              & 17.750                   & 0.222                                  \\ \hline
+\hhline{|=======|}
 SSP                & 2              & 8                 & 102.0                  & 9              & 10.111                   & 0.060                                  \\ \hline
 CS                 & 2              & 8                 & 166.0                  & 6              & 10.167                   & 0.061                                  \\ \hline
 SSPCS              & 2              & 8                 & 122.0                  & 6              & 10.667                   & 0.063                                  \\ \hline
 PD                 & 2              & 8                 & 101.0                  & 5              & 6.000                    & 0.033                                  \\ \hline
+\hhline{|=======|}
 SSP                & 3              & 9                 & 86.0                   & 16             & 8.500                    & 0.104                                  \\ \hline
 CS                 & 3              & 9                 & 122.0                  & 9              & 8.556                    & 0.104                                  \\ \hline
 SSPCS              & 3              & 9                 & 89.0                   & 9              & 9.111                    & 0.111                                  \\ \hline
 PD                 & 3              & 9                 & 86.0                   & 7              & 6.571                    & 0.069                                  \\ \hline
+\hhline{|=======|}
 SSP                & 4              & 53                & 582.0                  & 54             & 7.111                    & 0.037                                  \\ \hline
 CS                 & 4              & 53                & 1297.0                 & 20             & 7.600                    & 0.039                                  \\ \hline
 SSPCS              & 4              & 53                & 1217.0                 & 21             & 8.524                    & 0.044                                  \\ \hline
 PD                 & 4              & 53                & 571.0                  & 39             & 8.308                    & 0.044                                  \\ \hline
+\hhline{|=======|}
 SSP                & 5              & 42                & 3732.0                 & 66             & 8.439                    & 0.196                                  \\ \hline
 CS                 & 5              & 42                & 4918.0                 & 24             & 8.375                    & 0.195                                  \\ \hline
 SSPCS              & 5              & 42                & 4129.0                 & 25             & 9.560                    & 0.222                                  \\ \hline
 PD                 & 5              & 42                & 3664.0                 & 13             & 13.769                   & 0.181                                  \\ \hline
+\hhline{|=======|}
 SSP                & 6              & 70                & 3587.0                 & 79             & 9.114                    & 0.055                                  \\ \hline
 CS                 & 6              & 70                & 6724.0                 & 28             & 8.321                    & 0.050                                  \\ \hline
 SSPCS              & 6              & 70                & 3802.0                 & 30             & 10.100                   & 0.060                                  \\ \hline
 PD                 & 6              & 70                & 3577.0                 & 14             & 13.929                   & 0.083                                  \\ \hline
+\hhline{|=======|}
 SSP                & 7              & 36                & 1332.0                 & 83             & 9.048                    & 0.113                                  \\ \hline
 CS                 & 7              & 36                & 2087.0                 & 31             & 8.129                    & 0.102                                  \\ \hline
 SSPCS              & 7              & 36                & 1367.0                 & 33             & 9.970                    & 0.125                                  \\ \hline
 PD                 & 7              & 36                & 1332.0                 & 3              & 7.333                    & 0.088                                  \\ \hline
+\hhline{|=======|}
 SSP                & 8              & 309               & 8849.0                 & 141            & 8.879                    & 0.048                                  \\ \hline
 CS                 & 8              & 309               & 16749.0                & 43             & 7.302                    & 0.039                                  \\ \hline
 SSPCS              & 8              & 309               & 10253.0                & 47             & 9.362                    & 0.051                                  \\ \hline
@@ -808,14 +861,17 @@ SSP                & 9              & 132               & 938.0                 
 CS                 & 9              & 132               & 1277.0                 & 34             & 2.971                     & 0.031                                   \\ \hline
 SSPCS              & 9              & 132               & 1094.0                 & 39             & 3.462                     & 0.036                                   \\ \hline
 PD                 & 9              & 132               & 899.0                  & 80             & 4.600                     & 0.047                                   \\ \hline
+\hhline{|=======|}
 SSP                & 10             & 339               & 2187.0                 & 233            & 3.210                     & 0.016                                   \\ \hline
 CS                 & 10             & 339               & 2773.0                 & 124            & 2.903                     & 0.015                                   \\ \hline
 SSPCS              & 10             & 339               & 2443.0                 & 130            & 3.315                     & 0.017                                   \\ \hline
 PD                 & 10             & 339               & 2078.0                 & 206            & 4.796                     & 0.024                                   \\ \hline
+\hhline{|=======|}
 SSP                & 11             & 1090              & 24791.0                & 334            & 3.437                     & 0.035                                   \\ \hline
 CS                 & 11             & 1090              & 32541.0                & 170            & 2.900                     & 0.030                                   \\ \hline
 SSPCS              & 11             & 1090              & 26854.0                & 172            & 3.430                     & 0.035                                   \\ \hline
 PD                 & 11             & 1090              & 24017.0                & 173            & 7.538                     & 0.076                                   \\ \hline
+\hhline{|=======|}
 SSP                & 12             & 2485              & 53223.0                & 560            & 3.646                     & 0.019                                   \\ \hline
 CS                 & 12             & 2485              & 73211.0                & 261            & 2.904                     & 0.015                                   \\ \hline
 SSPCS              & 12             & 2485              & 61673.0                & 280            & 3.668                     & 0.019                                   \\ \hline
@@ -852,14 +908,17 @@ SSP                & 13             & 1                 & 15.0                  
 CS                 & 13             & 1                 & 15.0                   & 1              & 6.000                     & 0.857                                   \\ \hline
 SSPCS              & 13             & 1                 & 15.0                   & 1              & 6.000                     & 0.857                                   \\ \hline
 PD                 & 13             & 1                 & 15.0                   & 1              & 6.000                     & 0.750                                   \\ \hline
+\hhline{|=======|}
 SSP                & 14             & 4                 & 204.0                  & 5              & 17.400                    & 0.378                                   \\ \hline
 CS                 & 14             & 4                 & 244.0                  & 2              & 13.500                    & 0.293                                   \\ \hline
 SSPCS              & 14             & 4                 & 212.0                  & 2              & 13.500                    & 0.293                                   \\ \hline
 PD                 & 14             & 4                 & 204.0                  & 4              & 20.750                    & 0.648                                   \\ \hline
+\hhline{|=======|}
 SSP                & 15             & 8                 & 708.0                  & 7              & 15.000                    & 1.250                                   \\ \hline
 CS                 & 15             & 8                 & 904.0                  & 3              & 12.000                    & 1.000                                   \\ \hline
 SSPCS              & 15             & 8                 & 776.0                  & 3              & 12.000                    & 1.000                                   \\ \hline
 PD                 & 15             & 8                 & 708.0                  & 2              & 9.000                     & 0.818                                   \\ \hline
+\hhline{|=======|}
 SSP                & 16             & 2                 & 438.0                  & 8              & 16.750                    & 0.356                                   \\ \hline
 CS                 & 16             & 2                 & 510.0                  & 4              & 15.750                    & 0.335                                   \\ \hline
 SSPCS              & 16             & 2                 & 438.0                  & 4              & 16.250                    & 0.346                                   \\ \hline
@@ -897,14 +956,17 @@ SSP                & 17             & 6                 & 51.0                  
 CS                 & 17             & 6                 & 54.0                   & 2              & 9.000                     & 0.136                                   \\ \hline
 SSPCS              & 17             & 6                 & 54.0                   & 2              & 9.000                     & 0.136                                   \\ \hline
 PD                 & 17             & 6                 & 51.0                   & 4              & 8.750                     & 0.162                                   \\ \hline
+\hhline{|=======|}
 SSP                & 18             & 33                & 194.0                  & 27             & 6.296                     & 0.034                                   \\ \hline
 CS                 & 18             & 33                & 226.0                  & 12             & 6.750                     & 0.037                                   \\ \hline
 SSPCS              & 18             & 33                & 226.0                  & 12             & 6.750                     & 0.037                                   \\ \hline
 PD                 & 18             & 33                & 190.0                  & 23             & 6.435                     & 0.041                                   \\ \hline
+\hhline{|=======|}
 SSP                & 19             & 7                 & 70.0                   & 30             & 6.667                     & 0.106                                   \\ \hline
 CS                 & 19             & 7                 & 70.0                   & 13             & 7.000                     & 0.111                                   \\ \hline
 SSPCS              & 19             & 7                 & 70.0                   & 13             & 7.000                     & 0.111                                   \\ \hline
 PD                 & 19             & 7                 & 70.0                   & 3              & 10.000                    & 0.182                                   \\ \hline
+\hhline{|=======|}
 SSP                & 20             & 233               & 1256.0                 & 57             & 6.070                     & 0.034                                   \\ \hline
 CS                 & 20             & 233               & 1294.0                 & 24             & 6.375                     & 0.036                                   \\ \hline
 SSPCS              & 20             & 233               & 1294.0                 & 24             & 6.375                     & 0.036                                   \\ \hline
@@ -942,14 +1004,17 @@ SSP                & 21             & 107               & 290.0                 
 CS                 & 21             & 107               & 322.0                  & 26             & 2.846                     & 0.029                                   \\ \hline
 SSPCS              & 21             & 107               & 322.0                  & 26             & 2.846                     & 0.029                                   \\ \hline
 PD                 & 21             & 107               & 290.0                  & 51             & 3.137                     & 0.032                                   \\ \hline
+\hhline{|=======|}
 SSP                & 22             & 315               & 860.0                  & 188            & 2.782                     & 0.014                                   \\ \hline
 CS                 & 22             & 315               & 937.0                  & 114            & 2.860                     & 0.014                                   \\ \hline
 SSPCS              & 22             & 315               & 937.0                  & 114            & 2.860                     & 0.014                                   \\ \hline
 PD                 & 22             & 315               & 860.0                  & 153            & 3.497                     & 0.018                                   \\ \hline
+\hhline{|=======|}
 SSP                & 23             & 1009              & 2843.0                 & 257            & 2.813                     & 0.029                                   \\ \hline
 CS                 & 23             & 1009              & 2867.0                 & 150            & 2.867                     & 0.029                                   \\ \hline
 SSPCS              & 23             & 1009              & 2867.0                 & 150            & 2.867                     & 0.029                                   \\ \hline
 PD                 & 23             & 1009              & 2843.0                 & 83             & 3.566                     & 0.036                                   \\ \hline
+\hhline{|=======|}
 SSP                & 24             & 2437              & 6669.0                 & 429            & 2.818                     & 0.014                                   \\ \hline
 CS                 & 24             & 2437              & 6876.0                 & 244            & 2.857                     & 0.014                                   \\ \hline
 SSPCS              & 24             & 2437              & 6913.0                 & 242            & 2.860                     & 0.014                                   \\ \hline
@@ -987,14 +1052,17 @@ SSP                & 25             & 15                & 116.0                 
 CS                 & 25             & 15                & 142.0                  & 15             & 3.400                     & 0.037                                   \\ \hline
 SSPCS              & 25             & 15                & 116.0                  & 15             & 3.867                     & 0.042                                   \\ \hline
 PD                 & 25             & 15                & 111.0                  & 15             & 5.400                     & 0.057                                   \\ \hline
+\hhline{|=======|}
 SSP                & 26             & 25                & 166.0                  & 40             & 3.750                     & 0.019                                   \\ \hline
 CS                 & 26             & 25                & 244.0                  & 40             & 3.325                     & 0.017                                   \\ \hline
 SSPCS              & 26             & 25                & 166.0                  & 40             & 3.750                     & 0.019                                   \\ \hline
 PD                 & 26             & 25                & 164.0                  & 25             & 4.680                     & 0.024                                   \\ \hline
+\hhline{|=======|}
 SSP                & 27             & 6                 & 102.0                  & 46             & 3.913                     & 0.042                                   \\ \hline
 CS                 & 27             & 6                 & 222.0                  & 46             & 3.391                     & 0.036                                   \\ \hline
 SSPCS              & 27             & 6                 & 102.0                  & 46             & 3.913                     & 0.042                                   \\ \hline
 PD                 & 27             & 6                 & 102.0                  & 6              & 5.000                     & 0.052                                   \\ \hline
+\hhline{|=======|}
 SSP                & 28             & 15                & 257.0                  & 61             & 4.148                     & 0.021                                   \\ \hline
 CS                 & 28             & 15                & 479.0                  & 61             & 3.311                     & 0.017                                   \\ \hline
 SSPCS              & 28             & 15                & 257.0                  & 61             & 4.148                     & 0.021                                   \\ \hline
@@ -1095,8 +1163,36 @@ The results show that the number of augmenting paths depends on the algorithm an
 \paragraph{}
 In summary, this study provides useful insights into the performance of these four algorithms. For applications where achieving the lowest cost is important, the Primal-Dual algorithm is the best choice. When efficiency or reducing augmenting paths is more important, Algorithms 1 and 3 are good options. Algorithm 2, while not optimal in cost, can work well in special cases where shortest paths are enough. These results help in deciding which algorithm to use for different real-world problems related to the minimum-cost flow problem.
 
+%\section{Team Work Distribution}
+%
+%\begin{itemize}
+%	\item \textbf{\textit{Shanmukha Venkata Naga Sai Tummala:}} Writing the code for GENERATE-SINK-SOURCE-GRAPH, SuccessiveShortestPathsSC (Algorithm 3), Simulations 1 - code for finding out graph characteristics (except Edmonds-Karp), Working on Simulations 2
+%	\item \textbf{\textit{Mohamed Mohamed:}} Writing the code for Algorithm 4 (Primal Dual) and it's supporting methods and classes , Edmonds Karp - for Simulations, Test , Simulations 2, Working on Simulations 2
+%	\item \textbf{\textit{Parsa Kamalipour:}} Writing the code for Algorithm 1 (Successive Shortest Paths), writing the report in LaTeX, Creating the tables, gathering Info and citing previous works, Working on Simulations 2
+%	\item \textbf{\textit{Naveen Rayapudi:}} Writing the code for Algorithm 2 (Capacity Scaling), Working on Simulations 2
+%\end{itemize}
+%
+%\textbf{NOTE:} We did Simulations 2 as a group. We have worked together in finding the patterns that we found in the outputs, recording them, creating inputs for Simulations 2, analyzing the results and noting down the observations
+
 \section{Team Work Distribution}
-\textcolor{red}{TODO}
+
+\begin{itemize}
+    \item \textbf{\textit{Shanmukha Venkata Naga Sai Tummala:}} 
+    Developed the code for \texttt{GENERATE-SINK-SOURCE-GRAPH} and the \texttt{SuccessiveShortestPathsSC} (Algorithm 3). Implemented graph characteristic calculations (excluding Edmonds-Karp) for Simulations 1 and contributed to Simulations 2.
+    
+    \item \textbf{\textit{Mohamed Mohamed:}} 
+    Implemented Algorithm 4 (Primal-Dual) along with its supporting methods and classes. Worked on the Edmonds-Karp implementation for simulations, testing framework, and contributed significantly to Simulations 2.
+    
+    \item \textbf{\textit{Parsa Kamalipour:}} 
+    Developed the code for Algorithm 1 (Successive Shortest Paths). Fully wrote the report using LaTeX, created tables, gathered information, cited related works, and contributed to Simulations 2.
+    
+    \item \textbf{\textit{Naveen Rayapudi:}} 
+    Implemented Algorithm 2 (Capacity Scaling) and it's supporting methods and classes, contributed to Simulations 2.
+\end{itemize}
+
+\textbf{Group Collaboration:} 
+Simulations 2 was a group effort. We collaborated in analyzing outputs, identifying patterns, creating inputs, recording observations, and interpreting results. \\
+Each member actively participated in discussions and contributed to the success of this project.
 
 \bibliography{ref}
 
