@@ -1,4 +1,8 @@
-Requirements:
+Problem:
+-------------
+Implement various algorithms for finding minimum-cost flow in randomly generated source-sink networks, and analyze the results to study their performances. For more details, please see the report at Report_File_LaTeX/COMP6651_Report.pdf.
+
+System Requirements:
 ----------------
 The below are what we used to run the project with a single click in our own systems. If you are more comfortable with other IDEs and most recent Java versions, then you may also use them.
 - IntelliJ ([Install](https://www.jetbrains.com/idea/download/))
@@ -41,4 +45,4 @@ For Simulations:
 
 Reports:
 -------------
-The details of tests and simulations are clearly mentioned in the report. Please see the report for more details.
+The details of tests and simulations are clearly mentioned in the report. Please see the report at Report_File_LaTeX/COMP6651_Report.pdf.
